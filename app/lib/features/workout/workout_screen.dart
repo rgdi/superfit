@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/exercise.dart';
@@ -28,15 +27,11 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   DateTime? _lastSetAt;
   Map<String, double> _suggestedWeights = {}; // exerciseId -> peso
 
-  @override
-  void initState() {
-    super.initState();
-    WakelockPlus.enable();
-  }
+  // (no initState needed)
 
   @override
   void dispose() {
-    WakelockPlus.disable();
+    
     super.dispose();
   }
 
