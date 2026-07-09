@@ -1,0 +1,116 @@
+{
+  "id": "lower_a",
+  "name_es": "Tren inferior A (fuerza base)",
+  "name_en": "Lower A (strength base)",
+  "day_of_week": 3,
+  "estimated_minutes": 38,
+  "level": "intermediate",
+  "goal": "hypertrophy",
+  "warmup": [
+    {
+      "type": "mobility",
+      "name_es": "Círculos de cadera + sentadilla bodyweight",
+      "name_en": "Hip circles + bodyweight squats",
+      "duration_seconds": 90
+    },
+    {
+      "type": "activation",
+      "name_es": "Puentes de glúteo 2x15",
+      "name_en": "Glute bridges 2x15",
+      "duration_seconds": 60
+    }
+  ],
+  "workout": [
+    {
+      "exercise_id": "hack_squat",
+      "sets": 3,
+      "reps_target": "8-10",
+      "rpe_target": 8,
+      "rest_seconds": 150,
+      "tempo": "3-1-2-0",
+      "notes_es": "Profundidad máxima sin dolor.",
+      "notes_en": "Max depth pain-free.",
+      "superset_with": null
+    },
+    {
+      "exercise_id": "hip_thrust_machine",
+      "sets": 3,
+      "reps_target": "8-12",
+      "rpe_target": 8,
+      "rest_seconds": 120,
+      "tempo": "2-2-1-0",
+      "notes_es": "Aprieta glúteos arriba 1-2s.",
+      "notes_en": "Squeeze glutes 1-2s at top.",
+      "superset_with": null
+    },
+    {
+      "exercise_id": "leg_press",
+      "sets": 3,
+      "reps_target": "10-12",
+      "rpe_target": 8,
+      "rest_seconds": 120,
+      "tempo": "3-1-2-0",
+      "notes_es": "Pies altos = más glúteo, pies bajos = más cuádriceps.",
+      "notes_en": "High feet = more glute, low feet = more quads.",
+      "superset_with": null
+    },
+    {
+      "exercise_id": "leg_curl",
+      "sets": 3,
+      "reps_target": "10-15",
+      "rpe_target": 8,
+      "rest_seconds": 75,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "leg_extension"
+    },
+    {
+      "exercise_id": "leg_extension",
+      "sets": 3,
+      "reps_target": "12-15",
+      "rpe_target": 8,
+      "rest_seconds": 75,
+      "tempo": "2-1-2-1",
+      "notes_es": "Última serie: drop set opcional.",
+      "notes_en": "Last set: optional drop set.",
+      "superset_with": "leg_curl"
+    },
+    {
+      "exercise_id": "standing_calf_raise",
+      "sets": 3,
+      "reps_target": "10-15",
+      "rpe_target": 8,
+      "rest_seconds": 60,
+      "tempo": "2-2-1-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "seated_calf_raise"
+    },
+    {
+      "exercise_id": "seated_calf_raise",
+      "sets": 3,
+      "reps_target": "12-20",
+      "rpe_target": 8,
+      "rest_seconds": 60,
+      "tempo": "2-2-1-1",
+      "notes_es": "Énfasis en sóleo.",
+      "notes_en": "Soleus emphasis.",
+      "superset_with": "standing_calf_raise"
+    }
+  ],
+  "cooldown": [
+    {
+      "type": "stretch",
+      "name_es": "Estiramiento cuádriceps de pie",
+      "name_en": "Standing quad stretch",
+      "duration_seconds": 60
+    },
+    {
+      "type": "stretch",
+      "name_es": "Estiramiento isquios con banda",
+      "name_en": "Hamstring band stretch",
+      "duration_seconds": 60
+    }
+  ]
+}

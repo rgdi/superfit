@@ -1,0 +1,178 @@
+[
+  {
+    "id": "pectoralis_major_clavicular",
+    "name_es": "Pectoral mayor (clavicular)",
+    "name_en": "Upper chest",
+    "color_hex": "#FF6B6B",
+    "region": "chest",
+    "side": "front"
+  },
+  {
+    "id": "pectoralis_major_sternal",
+    "name_es": "Pectoral mayor (esternal)",
+    "name_en": "Mid/lower chest",
+    "color_hex": "#FF6B6B",
+    "region": "chest",
+    "side": "front"
+  },
+  {
+    "id": "deltoid_anterior",
+    "name_es": "Deltoides anterior",
+    "name_en": "Front delts",
+    "color_hex": "#FF9F43",
+    "region": "shoulder",
+    "side": "front"
+  },
+  {
+    "id": "deltoid_lateral",
+    "name_es": "Deltoides lateral",
+    "name_en": "Side delts",
+    "color_hex": "#FF9F43",
+    "region": "shoulder",
+    "side": "front"
+  },
+  {
+    "id": "deltoid_posterior",
+    "name_es": "Deltoides posterior",
+    "name_en": "Rear delts",
+    "color_hex": "#FF9F43",
+    "region": "shoulder",
+    "side": "back"
+  },
+  {
+    "id": "biceps_brachii",
+    "name_es": "Bíceps braquial",
+    "name_en": "Biceps",
+    "color_hex": "#FFA8A8",
+    "region": "arm",
+    "side": "front"
+  },
+  {
+    "id": "brachialis",
+    "name_es": "Braquial",
+    "name_en": "Brachialis",
+    "color_hex": "#FFA8A8",
+    "region": "arm",
+    "side": "front"
+  },
+  {
+    "id": "triceps_long",
+    "name_es": "Tríceps (cabeza larga)",
+    "name_en": "Triceps long head",
+    "color_hex": "#C77DFF",
+    "region": "arm",
+    "side": "back"
+  },
+  {
+    "id": "triceps_lateral",
+    "name_es": "Tríceps (cabeza lateral)",
+    "name_en": "Triceps lateral head",
+    "color_hex": "#C77DFF",
+    "region": "arm",
+    "side": "back"
+  },
+  {
+    "id": "latissimus_dorsi",
+    "name_es": "Dorsal ancho",
+    "name_en": "Lats",
+    "color_hex": "#4ECDC4",
+    "region": "back",
+    "side": "back"
+  },
+  {
+    "id": "trapezius_upper",
+    "name_es": "Trapecio superior",
+    "name_en": "Upper traps",
+    "color_hex": "#54A0FF",
+    "region": "back",
+    "side": "back"
+  },
+  {
+    "id": "trapezius_middle",
+    "name_es": "Trapecio medio",
+    "name_en": "Mid traps",
+    "color_hex": "#54A0FF",
+    "region": "back",
+    "side": "back"
+  },
+  {
+    "id": "rhomboids",
+    "name_es": "Romboides",
+    "name_en": "Rhomboids",
+    "color_hex": "#54A0FF",
+    "region": "back",
+    "side": "back"
+  },
+  {
+    "id": "rectus_abdominis",
+    "name_es": "Recto abdominal",
+    "name_en": "Abs",
+    "color_hex": "#FECA57",
+    "region": "core",
+    "side": "front"
+  },
+  {
+    "id": "obliques",
+    "name_es": "Oblicuos",
+    "name_en": "Obliques",
+    "color_hex": "#FECA57",
+    "region": "core",
+    "side": "front"
+  },
+  {
+    "id": "erector_spinae",
+    "name_es": "Erector espinal",
+    "name_en": "Lower back",
+    "color_hex": "#48DBFB",
+    "region": "back",
+    "side": "back"
+  },
+  {
+    "id": "quadriceps",
+    "name_es": "Cuádriceps",
+    "name_en": "Quads",
+    "color_hex": "#FF6B6B",
+    "region": "leg",
+    "side": "front"
+  },
+  {
+    "id": "hamstrings",
+    "name_es": "Isquiosurales",
+    "name_en": "Hamstrings",
+    "color_hex": "#1DD1A1",
+    "region": "leg",
+    "side": "back"
+  },
+  {
+    "id": "gluteus_maximus",
+    "name_es": "Glúteo mayor",
+    "name_en": "Glutes",
+    "color_hex": "#5F27CD",
+    "region": "leg",
+    "side": "back"
+  },
+  {
+    "id": "gluteus_medius",
+    "name_es": "Glúteo medio",
+    "name_en": "Glute medius",
+    "color_hex": "#5F27CD",
+    "region": "leg",
+    "side": "side"
+  },
+  {
+    "id": "gastrocnemius",
+    "name_es": "Gemelos",
+    "name_en": "Calves",
+    "color_hex": "#FF9FF3",
+    "region": "leg",
+    "side": "back"
+  },
+  {
+    "id": "soleus",
+    "name_es": "Sóleo",
+    "name_en": "Soleus",
+    "color_hex": "#FF9FF3",
+    "region": "leg",
+    "side": "back"
+  }
+]

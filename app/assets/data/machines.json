@@ -1,0 +1,182 @@
+[
+  {
+    "id": "chest_press",
+    "name_es": "Press de pecho",
+    "name_en": "Chest press",
+    "description_es": "Máquina de palanca selectora para press horizontal. Asiento regulable, dos mangos a los lados.",
+    "description_en": "Selectorized horizontal press machine. Adjustable seat, two side handles.",
+    "image_path": "assets/images/machines/chest_press.png",
+    "primary_muscles": ["pectoralis_major_sternal", "pectoralis_major_clavicular"],
+    "adjustments": ["seat_height", "back_angle"]
+  },
+  {
+    "id": "incline_chest_press",
+    "name_es": "Press de pecho inclinado",
+    "name_en": "Incline chest press",
+    "description_es": "Press inclinado a 30-45° en máquina selectorizada.",
+    "description_en": "30-45° incline selectorized chest press.",
+    "image_path": "assets/images/machines/incline_chest_press.png",
+    "primary_muscles": ["pectoralis_major_clavicular"],
+    "adjustments": ["back_angle"]
+  },
+  {
+    "id": "pec_deck",
+    "name_es": "Pec deck (aperturas)",
+    "name_en": "Pec deck",
+    "description_es": "Máquina de aperturas con dos pads giratorios para los antebrazos.",
+    "description_en": "Fly machine with rotating forearm pads.",
+    "image_path": "assets/images/machines/pec_deck.png",
+    "primary_muscles": ["pectoralis_major_sternal"],
+    "adjustments": ["seat_height"]
+  },
+  {
+    "id": "functional_trainer",
+    "name_es": "Functional trainer (cables cruzados)",
+    "name_en": "Functional trainer",
+    "description_es": "Estructura con dos poleas ajustables en altura, multi-ángulo.",
+    "description_en": "Dual adjustable pulleys, multi-angle.",
+    "image_path": "assets/images/machines/functional_trainer.png",
+    "primary_muscles": [],
+    "adjustments": ["pulley_height"]
+  },
+  {
+    "id": "lat_pulldown",
+    "name_es": "Polea de jalón",
+    "name_en": "Lat pulldown",
+    "description_es": "Polea alta con rodillo para muslos. Barra o agarres.",
+    "description_en": "High pulley with thigh pad.",
+    "image_path": "assets/images/machines/lat_pulldown.png",
+    "primary_muscles": ["latissimus_dorsi"],
+    "adjustments": ["thigh_pad"]
+  },
+  {
+    "id": "seated_row",
+    "name_es": "Remo sentado",
+    "name_en": "Seated row",
+    "description_es": "Máquina de remo horizontal con apoyo pectoral.",
+    "description_en": "Horizontal row with chest pad.",
+    "image_path": "assets/images/machines/seated_row.png",
+    "primary_muscles": ["latissimus_dorsi", "rhomboids", "trapezius_middle"],
+    "adjustments": ["chest_pad", "seat_depth"]
+  },
+  {
+    "id": "shoulder_press",
+    "name_es": "Press de hombros",
+    "name_en": "Shoulder press",
+    "description_es": "Press vertical en máquina, asiento con respaldo.",
+    "description_en": "Vertical press machine, seated.",
+    "image_path": "assets/images/machines/shoulder_press.png",
+    "primary_muscles": ["deltoid_anterior", "deltoid_lateral"],
+    "adjustments": ["seat_height"]
+  },
+  {
+    "id": "lateral_raise",
+    "name_es": "Elevación lateral",
+    "name_en": "Lateral raise",
+    "description_es": "Máquina de elevación lateral con pads para antebrazos.",
+    "description_en": "Lateral raise with forearm pads.",
+    "image_path": "assets/images/machines/lateral_raise.png",
+    "primary_muscles": ["deltoid_lateral"],
+    "adjustments": ["seat_height"]
+  },
+  {
+    "id": "cable_pulley",
+    "name_es": "Polea individual",
+    "name_en": "Cable pulley",
+    "description_es": "Polea simple, alta o baja según ejercicio.",
+    "description_en": "Single pulley, high or low.",
+    "image_path": "assets/images/machines/cable_pulley.png",
+    "primary_muscles": [],
+    "adjustments": ["pulley_height"]
+  },
+  {
+    "id": "leg_press",
+    "name_es": "Prensa de piernas",
+    "name_en": "Leg press",
+    "description_es": "Plataforma a 45°, asiento reclinado con respaldo.",
+    "description_en": "45° platform, reclined seat.",
+    "image_path": "assets/images/machines/leg_press.png",
+    "primary_muscles": ["quadriceps", "gluteus_maximus"],
+    "adjustments": ["seat_position", "back_angle"]
+  },
+  {
+    "id": "hack_squat",
+    "name_es": "Hack squat",
+    "name_en": "Hack squat",
+    "description_es": "Máquina de sentadilla guiada con pista, hombros bajo pads.",
+    "description_en": "Guided squat machine with track, shoulders under pads.",
+    "image_path": "assets/images/machines/hack_squat.png",
+    "primary_muscles": ["quadriceps", "gluteus_maximus"],
+    "adjustments": ["shoulder_pads", "back_angle", "stops"]
+  },
+  {
+    "id": "leg_extension",
+    "name_es": "Extensión de piernas",
+    "name_en": "Leg extension",
+    "description_es": "Asiento con eje a la altura de la rodilla, pad en el tobillo.",
+    "description_en": "Seated machine, axis at knee, ankle pad.",
+    "image_path": "assets/images/machines/leg_extension.png",
+    "primary_muscles": ["quadriceps"],
+    "adjustments": ["seat_position", "ankle_pad"]
+  },
+  {
+    "id": "leg_curl",
+    "name_es": "Curl femoral",
+    "name_en": "Leg curl",
+    "description_es": "Acostado o sentado, pad en el tobillo.",
+    "description_en": "Prone or seated, ankle pad.",
+    "image_path": "assets/images/machines/leg_curl.png",
+    "primary_muscles": ["hamstrings"],
+    "adjustments": ["ankle_pad", "axis_position"]
+  },
+  {
+    "id": "calf_raise",
+    "name_es": "Gemelos de pie",
+    "name_en": "Standing calf raise",
+    "description_es": "Pads en hombros, plataforma con escalón para el antepié.",
+    "description_en": "Shoulder pads, platform with toe edge.",
+    "image_path": "assets/images/machines/calf_raise.png",
+    "primary_muscles": ["gastrocnemius"],
+    "adjustments": ["shoulder_pads"]
+  },
+  {
+    "id": "seated_calf_raise",
+    "name_es": "Gemelos sentado",
+    "name_en": "Seated calf raise",
+    "description_es": "Asiento con pads en rodillas, plataforma para pies.",
+    "description_en": "Seated with knee pads, foot platform.",
+    "image_path": "assets/images/machines/seated_calf_raise.png",
+    "primary_muscles": ["soleus"],
+    "adjustments": ["knee_pads"]
+  },
+  {
+    "id": "hip_thrust",
+    "name_es": "Hip thrust",
+    "name_en": "Hip thrust",
+    "description_es": "Respaldo para hombros, plataforma para pies, palanca con peso.",
+    "description_en": "Shoulder backrest, foot platform, lever.",
+    "image_path": "assets/images/machines/hip_thrust.png",
+    "primary_muscles": ["gluteus_maximus"],
+    "adjustments": ["back_pad", "foot_platform"]
+  },
+  {
+    "id": "hip_abductor",
+    "name_es": "Abductor de cadera",
+    "name_en": "Hip abductor",
+    "description_es": "Asiento con dos pads en la parte externa de las rodillas.",
+    "description_en": "Seated, two pads on outer knees.",
+    "image_path": "assets/images/machines/hip_abductor.png",
+    "primary_muscles": ["gluteus_medius"],
+    "adjustments": ["seat_position", "start_width"]
+  },
+  {
+    "id": "back_extension",
+    "name_es": "Extensión lumbar",
+    "name_en": "Back extension",
+    "description_es": "Banco a 45° con pads para tobillos, pad ajustable en lumbar.",
+    "description_en": "45° bench, ankle pads, lumbar pad.",
+    "image_path": "assets/images/machines/back_extension.png",
+    "primary_muscles": ["erector_spinae", "gluteus_maximus"],
+    "adjustments": ["ankle_pads", "lumbar_pad"]
+  }
+]

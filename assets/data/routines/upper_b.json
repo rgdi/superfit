@@ -1,0 +1,116 @@
+{
+  "id": "upper_b",
+  "name_es": "Tren superior B (hombro/espalda/brazo)",
+  "name_en": "Upper B (shoulder/back/arms)",
+  "day_of_week": 5,
+  "estimated_minutes": 40,
+  "level": "intermediate",
+  "goal": "hypertrophy",
+  "warmup": [
+    {
+      "type": "mobility",
+      "name_es": "Rotación externa con banda",
+      "name_en": "Band external rotations",
+      "duration_seconds": 90
+    },
+    {
+      "type": "activation",
+      "name_es": "Face pull 2x20 muy ligero",
+      "name_en": "Light face pulls 2x20",
+      "duration_seconds": 60
+    }
+  ],
+  "workout": [
+    {
+      "exercise_id": "incline_chest_press_machine",
+      "sets": 3,
+      "reps_target": "8-12",
+      "rpe_target": 8,
+      "rest_seconds": 120,
+      "tempo": "3-1-2-0",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": null
+    },
+    {
+      "exercise_id": "seated_row_machine",
+      "sets": 3,
+      "reps_target": "8-12",
+      "rpe_target": 8,
+      "rest_seconds": 105,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": null
+    },
+    {
+      "exercise_id": "lateral_raise_machine",
+      "sets": 3,
+      "reps_target": "12-15",
+      "rpe_target": 8,
+      "rest_seconds": 60,
+      "tempo": "2-1-2-1",
+      "notes_es": "Última serie: rest-pause.",
+      "notes_en": "Last set: rest-pause.",
+      "superset_with": "cable_lateral_raise"
+    },
+    {
+      "exercise_id": "cable_lateral_raise",
+      "sets": 2,
+      "reps_target": "12-15",
+      "rpe_target": 8,
+      "rest_seconds": 60,
+      "tempo": "2-1-2-1",
+      "notes_es": "Unilateral.",
+      "notes_en": "Unilateral.",
+      "superset_with": "lateral_raise_machine"
+    },
+    {
+      "exercise_id": "cable_pullover",
+      "sets": 3,
+      "reps_target": "10-15",
+      "rpe_target": 8,
+      "rest_seconds": 75,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": null
+    },
+    {
+      "exercise_id": "reverse_pec_deck",
+      "sets": 3,
+      "reps_target": "12-15",
+      "rpe_target": 8,
+      "rest_seconds": 60,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "cable_bicep_curl"
+    },
+    {
+      "exercise_id": "cable_bicep_curl",
+      "sets": 3,
+      "reps_target": "10-15",
+      "rpe_target": 8,
+      "rest_seconds": 60,
+      "tempo": "2-1-2-0",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "reverse_pec_deck"
+    }
+  ],
+  "cooldown": [
+    {
+      "type": "stretch",
+      "name_es": "Estiramiento hombro y tríceps",
+      "name_en": "Shoulder and triceps stretch",
+      "duration_seconds": 60
+    },
+    {
+      "type": "stretch",
+      "name_es": "Estiramiento dorsal",
+      "name_en": "Lat stretch",
+      "duration_seconds": 60
+    }
+  ]
+}

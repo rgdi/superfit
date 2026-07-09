@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "description_es": "Plan por defecto 4 semanas: 3 semanas hipertrofia + 1 deload, luego repite. 4 días/semana Upper/Lower.",
+  "description_en": "Default plan 4 weeks: 3 weeks hypertrophy + 1 deload, then repeat. 4 days/week Upper/Lower.",
+  "default_level": "intermediate",
+  "default_goal": "hypertrophy",
+  "cycles": [
+    {
+      "week_index": 1,
+      "name_es": "Semana 1 (intro)",
+      "name_en": "Week 1 (intro)",
+      "phase": "build",
+      "volume_modifier": 1.0,
+      "rpe_modifier": -1,
+      "routine_assignments": [
+        {"day": 1, "routine_id": "upper_a"},
+        {"day": 3, "routine_id": "lower_a"},
+        {"day": 5, "routine_id": "upper_b"},
+        {"day": 6, "routine_id": "lower_b"}
+      ]
+    },
+    {
+      "week_index": 2,
+      "name_es": "Semana 2 (volumen)",
+      "name_en": "Week 2 (volume)",
+      "phase": "build",
+      "volume_modifier": 1.1,
+      "rpe_modifier": 0,
+      "routine_assignments": [
+        {"day": 1, "routine_id": "upper_a"},
+        {"day": 3, "routine_id": "lower_a"},
+        {"day": 5, "routine_id": "upper_b"},
+        {"day": 6, "routine_id": "lower_b"}
+      ]
+    },
+    {
+      "week_index": 3,
+      "name_es": "Semana 3 (pico)",
+      "name_en": "Week 3 (peak)",
+      "phase": "build",
+      "volume_modifier": 1.2,
+      "rpe_modifier": 0,
+      "routine_assignments": [
+        {"day": 1, "routine_id": "upper_a"},
+        {"day": 3, "routine_id": "lower_a"},
+        {"day": 5, "routine_id": "upper_b"},
+        {"day": 6, "routine_id": "lower_b"}
+      ]
+    },
+    {
+      "week_index": 4,
+      "name_es": "Semana 4 (deload)",
+      "name_en": "Week 4 (deload)",
+      "phase": "deload",
+      "volume_modifier": 0.5,
+      "rpe_modifier": -2,
+      "routine_assignments": [
+        {"day": 2, "routine_id": "deload"},
+        {"day": 5, "routine_id": "deload"}
+      ]
+    }
+  ],
+  "level_modifiers": {
+    "beginner": {
+      "default_reps": "10-15",
+      "rpe_target": 7,
+      "rest_modifier": 1.2
+    },
+    "intermediate": {
+      "default_reps": "8-12",
+      "rpe_target": 8,
+      "rest_modifier": 1.0
+    },
+    "advanced": {
+      "default_reps": "6-10",
+      "rpe_target": 9,
+      "rest_modifier": 0.9
+    }
+  },
+  "goal_modifiers": {
+    "hypertrophy": {"reps_modifier": "8-12", "rpe_target": 8},
+    "strength": {"reps_modifier": "4-6", "rpe_target": 9},
+    "maintenance": {"reps_modifier": "10-12", "rpe_target": 7},
+    "definition": {"reps_modifier": "12-15", "rpe_target": 8}
+  }
+}

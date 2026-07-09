@@ -1,0 +1,82 @@
+{
+  "id": "deload",
+  "name_es": "Deload (recuperación)",
+  "name_en": "Deload (recovery)",
+  "day_of_week": 0,
+  "estimated_minutes": 25,
+  "level": "intermediate",
+  "goal": "deload",
+  "warmup": [
+    {
+      "type": "mobility",
+      "name_es": "Movilidad general 5 min",
+      "name_en": "General mobility 5 min",
+      "duration_seconds": 300
+    }
+  ],
+  "workout": [
+    {
+      "exercise_id": "chest_press_machine",
+      "sets": 2,
+      "reps_target": "12-15",
+      "rpe_target": 6,
+      "rest_seconds": 90,
+      "tempo": "2-1-2-0",
+      "notes_es": "Mismo peso o 5% menos. Sin esfuerzo.",
+      "notes_en": "Same weight or 5% less. No effort.",
+      "superset_with": null
+    },
+    {
+      "exercise_id": "lat_pulldown",
+      "sets": 2,
+      "reps_target": "12-15",
+      "rpe_target": 6,
+      "rest_seconds": 90,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": null
+    },
+    {
+      "exercise_id": "leg_press",
+      "sets": 2,
+      "reps_target": "12-15",
+      "rpe_target": 6,
+      "rest_seconds": 90,
+      "tempo": "2-1-2-0",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": null
+    },
+    {
+      "exercise_id": "leg_curl",
+      "sets": 2,
+      "reps_target": "12-15",
+      "rpe_target": 6,
+      "rest_seconds": 75,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": null
+    },
+    {
+      "exercise_id": "cable_crunch",
+      "sets": 2,
+      "reps_target": "15-20",
+      "rpe_target": 6,
+      "rest_seconds": 60,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": null
+    }
+  ],
+  "cooldown": [
+    {
+      "type": "stretch",
+      "name_es": "Estiramiento full body 5 min",
+      "name_en": "Full body stretch 5 min",
+      "duration_seconds": 300
+    }
+  ]
+}

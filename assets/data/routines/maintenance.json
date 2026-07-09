@@ -1,0 +1,93 @@
+{
+  "id": "maintenance",
+  "name_es": "Mantenimiento (mínimo efectivo)",
+  "name_en": "Maintenance (minimum effective)",
+  "day_of_week": 2,
+  "estimated_minutes": 28,
+  "level": "all",
+  "goal": "maintenance",
+  "warmup": [
+    {
+      "type": "mobility",
+      "name_es": "Movilidad articular 4 min",
+      "name_en": "Joint mobility 4 min",
+      "duration_seconds": 240
+    }
+  ],
+  "workout": [
+    {
+      "exercise_id": "chest_press_machine",
+      "sets": 2,
+      "reps_target": "10-12",
+      "rpe_target": 7,
+      "rest_seconds": 90,
+      "tempo": "2-1-2-0",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "lat_pulldown"
+    },
+    {
+      "exercise_id": "lat_pulldown",
+      "sets": 2,
+      "reps_target": "10-12",
+      "rpe_target": 7,
+      "rest_seconds": 90,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "chest_press_machine"
+    },
+    {
+      "exercise_id": "shoulder_press_machine",
+      "sets": 2,
+      "reps_target": "10-12",
+      "rpe_target": 7,
+      "rest_seconds": 90,
+      "tempo": "2-1-2-0",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "seated_row_machine"
+    },
+    {
+      "exercise_id": "seated_row_machine",
+      "sets": 2,
+      "reps_target": "10-12",
+      "rpe_target": 7,
+      "rest_seconds": 90,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "shoulder_press_machine"
+    },
+    {
+      "exercise_id": "leg_press",
+      "sets": 2,
+      "reps_target": "10-12",
+      "rpe_target": 7,
+      "rest_seconds": 90,
+      "tempo": "2-1-2-0",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "leg_curl"
+    },
+    {
+      "exercise_id": "leg_curl",
+      "sets": 2,
+      "reps_target": "10-12",
+      "rpe_target": 7,
+      "rest_seconds": 75,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "leg_press"
+    }
+  ],
+  "cooldown": [
+    {
+      "type": "stretch",
+      "name_es": "Estiramiento global 3 min",
+      "name_en": "Global stretch 3 min",
+      "duration_seconds": 180
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "id": "upper_a",
+  "name_es": "Tren superior A (pecho/espalda/focos)",
+  "name_en": "Upper A (chest/back/arms)",
+  "day_of_week": 1,
+  "estimated_minutes": 40,
+  "level": "intermediate",
+  "goal": "hypertrophy",
+  "warmup": [
+    {
+      "type": "mobility",
+      "name_es": "Círculos de hombro + banda torácica",
+      "name_en": "Shoulder circles + band pull-aparts",
+      "duration_seconds": 90
+    },
+    {
+      "type": "activation",
+      "name_es": "2x15 push-ups ligeras",
+      "name_en": "2x15 light push-ups",
+      "duration_seconds": 60
+    }
+  ],
+  "workout": [
+    {
+      "exercise_id": "chest_press_machine",
+      "sets": 3,
+      "reps_target": "8-12",
+      "rpe_target": 8,
+      "rest_seconds": 120,
+      "tempo": "3-1-2-0",
+      "notes_es": "Subir peso si completas 12 a RPE≤8 dos sesiones seguidas.",
+      "notes_en": "Add weight if you hit 12 reps at RPE≤8 two sessions in a row.",
+      "superset_with": null
+    },
+    {
+      "exercise_id": "lat_pulldown",
+      "sets": 3,
+      "reps_target": "8-12",
+      "rpe_target": 8,
+      "rest_seconds": 105,
+      "tempo": "2-1-2-1",
+      "notes_es": "Agarre neutro si molesta el hombro.",
+      "notes_en": "Use neutral grip if shoulder feels off.",
+      "superset_with": null
+    },
+    {
+      "exercise_id": "shoulder_press_machine",
+      "sets": 3,
+      "reps_target": "8-12",
+      "rpe_target": 8,
+      "rest_seconds": 120,
+      "tempo": "3-1-2-0",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": null
+    },
+    {
+      "exercise_id": "seated_row_machine",
+      "sets": 3,
+      "reps_target": "10-12",
+      "rpe_target": 8,
+      "rest_seconds": 105,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": null
+    },
+    {
+      "exercise_id": "pec_deck",
+      "sets": 3,
+      "reps_target": "12-15",
+      "rpe_target": 8,
+      "rest_seconds": 75,
+      "tempo": "2-1-2-1",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "cable_tricep_pushdown"
+    },
+    {
+      "exercise_id": "cable_tricep_pushdown",
+      "sets": 3,
+      "reps_target": "12-15",
+      "rpe_target": 8,
+      "rest_seconds": 75,
+      "tempo": "2-1-2-0",
+      "notes_es": "Última serie: rest-pause opcional.",
+      "notes_en": "Last set: optional rest-pause.",
+      "superset_with": "pec_deck"
+    },
+    {
+      "exercise_id": "cable_bicep_curl",
+      "sets": 2,
+      "reps_target": "12-15",
+      "rpe_target": 8,
+      "rest_seconds": 60,
+      "tempo": "2-1-2-0",
+      "notes_es": null,
+      "notes_en": null,
+      "superset_with": "face_pull"
+    },
+    {
+      "exercise_id": "face_pull",
+      "sets": 2,
+      "reps_target": "12-15",
+      "rpe_target": 8,
+      "rest_seconds": 60,
+      "tempo": "2-1-2-1",
+      "notes_es": "Reps lentas.",
+      "notes_en": "Slow reps.",
+      "superset_with": "cable_bicep_curl"
+    }
+  ],
+  "cooldown": [
+    {
+      "type": "stretch",
+      "name_es": "Estiramiento pectoral en marco de puerta",
+      "name_en": "Doorway pec stretch",
+      "duration_seconds": 60
+    },
+    {
+      "type": "stretch",
+      "name_es": "Estiramiento dorsal colgado de barra",
+      "name_en": "Lat hang stretch",
+      "duration_seconds": 60
+    }
+  ]
+}

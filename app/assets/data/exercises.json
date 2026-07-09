@@ -1,0 +1,738 @@
+[
+  {
+    "id": "chest_press_machine",
+    "name_es": "Press de pecho en máquina",
+    "name_en": "Chest press machine",
+    "category": "compound",
+    "pattern": "horizontal_push",
+    "primary_muscles": ["pectoralis_major_sternal", "pectoralis_major_clavicular"],
+    "secondary_muscles": ["deltoid_anterior", "triceps_lateral", "triceps_long"],
+    "equipment_id": "chest_press",
+    "image_path": "assets/images/exercises/chest_press_machine.png",
+    "instructions_es": [
+      "Ajusta el asiento para que los mangos queden a la altura del pecho medio.",
+      "Agarra los mangos con las palmas mirando al frente, ligeramente más ancho que los hombros.",
+      "Empuja hacia adelante sin bloquear los codos al final.",
+      "Controla la vuelta, lleva los codos a la altura del torso sin que sobrepasen detrás del cuerpo."
+    ],
+    "instructions_en": [
+      "Adjust the seat so handles align with mid-chest.",
+      "Grip handles palms-forward, slightly wider than shoulders.",
+      "Press forward without locking elbows.",
+      "Control the return, elbows stay at torso level."
+    ],
+    "cues_es": ["Pecho arriba", "Escápulas contra el respaldo", "Codos a 45-75° del torso"],
+    "cues_en": ["Chest up", "Scapulae retracted", "Elbows at 45-75°"],
+    "default_reps": "8-12",
+    "default_rest_seconds": 120,
+    "rpe_target": 8,
+    "contraindications": ["shoulder_impingement_severe"],
+    "tempo": "3-1-2-0",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "incline_chest_press_machine",
+    "name_es": "Press de pecho inclinado en máquina",
+    "name_en": "Incline chest press machine",
+    "category": "compound",
+    "pattern": "horizontal_push",
+    "primary_muscles": ["pectoralis_major_clavicular"],
+    "secondary_muscles": ["deltoid_anterior", "triceps_lateral"],
+    "equipment_id": "incline_chest_press",
+    "image_path": "assets/images/exercises/incline_chest_press_machine.png",
+    "instructions_es": [
+      "Respaldo a 30-45°.",
+      "Agarre a la anchura de los hombros.",
+      "Empuja arriba y hacia atrás, no recto hacia delante.",
+      "Vuelve controlando hasta que los codos queden detrás del plano del torso."
+    ],
+    "instructions_en": [
+      "Backrest at 30-45°.",
+      "Grip shoulder-width.",
+      "Press upward and back, not straight forward.",
+      "Return until elbows are just behind torso plane."
+    ],
+    "cues_es": ["Empuja arriba y atrás", "No rebotes en el respaldo"],
+    "cues_en": ["Press up and back", "Don't bounce off the pad"],
+    "default_reps": "8-12",
+    "default_rest_seconds": 120,
+    "rpe_target": 8,
+    "contraindications": ["shoulder_impingement_severe"],
+    "tempo": "3-1-2-0",
+    "source_research": "Contreras 2014"
+  },
+  {
+    "id": "pec_deck",
+    "name_es": "Pec deck (aperturas en máquina)",
+    "name_en": "Pec deck fly",
+    "category": "isolation",
+    "pattern": "horizontal_pull",
+    "primary_muscles": ["pectoralis_major_sternal"],
+    "secondary_muscles": ["pectoralis_major_clavicular", "deltoid_anterior"],
+    "equipment_id": "pec_deck",
+    "image_path": "assets/images/exercises/pec_deck.png",
+    "instructions_es": [
+      "Ajusta el asiento para que los brazos queden paralelos al suelo al inicio.",
+      "Agarra los mangos con los codos a 90-120° de flexión.",
+      "Cierra los brazos delante del pecho sin bloquear codos.",
+      "Vuelve abriendo hasta sentir estiramiento en el pecho."
+    ],
+    "instructions_en": [
+      "Seat so arms parallel to floor at start.",
+      "Grip with elbows at 90-120° flexion.",
+      "Close arms in front of chest without locking.",
+      "Return to chest stretch."
+    ],
+    "cues_es": ["Codos fijos en ángulo", "Aprieta el pecho al cerrar"],
+    "cues_en": ["Fixed elbow angle", "Squeeze chest on close"],
+    "default_reps": "10-15",
+    "default_rest_seconds": 75,
+    "rpe_target": 8,
+    "contraindications": ["shoulder_impingement"],
+    "tempo": "2-1-2-1",
+    "source_research": "Schoenfeld 2020"
+  },
+  {
+    "id": "cable_crossover",
+    "name_es": "Cable crossover (functional trainer)",
+    "name_en": "Cable crossover",
+    "category": "isolation",
+    "pattern": "horizontal_pull",
+    "primary_muscles": ["pectoralis_major_sternal"],
+    "secondary_muscles": ["pectoralis_major_clavicular", "deltoid_anterior"],
+    "equipment_id": "functional_trainer",
+    "image_path": "assets/images/exercises/cable_crossover.png",
+    "instructions_es": [
+      "Poleas a la altura de los hombros o por encima.",
+      "Coge un mango en cada mano, da un paso adelante.",
+      "Cierra los brazos en arco delante del cuerpo, sin encorvar.",
+      "Vuelve controlando sin que los pesos choquen."
+    ],
+    "instructions_en": [
+      "Pulleys at shoulder height or above.",
+      "One handle in each hand, step forward.",
+      "Close arms in an arc in front of body.",
+      "Control the return, don't let weights slam."
+    ],
+    "cues_es": ["Codos ligeramente flexionados", "Aprieta abajo y al centro"],
+    "cues_en": ["Slight elbow bend", "Squeeze down and in"],
+    "default_reps": "10-15",
+    "default_rest_seconds": 75,
+    "rpe_target": 8,
+    "contraindications": ["shoulder_impingement"],
+    "tempo": "2-1-2-1",
+    "source_research": "Schoenfeld 2020"
+  },
+  {
+    "id": "lat_pulldown",
+    "name_es": "Jalón al pecho (polea)",
+    "name_en": "Lat pulldown",
+    "category": "compound",
+    "pattern": "vertical_pull",
+    "primary_muscles": ["latissimus_dorsi"],
+    "secondary_muscles": ["biceps_brachii", "brachialis", "rhomboids", "trapezius_middle"],
+    "equipment_id": "lat_pulldown",
+    "image_path": "assets/images/exercises/lat_pulldown.png",
+    "instructions_es": [
+      "Agarre prono (palmas al frente) algo más ancho que hombros, o neutro.",
+      "Siéntate con muslos bajo el rodillo, torso ligeramente inclinado atrás.",
+      "Tira del bar al pecho (esternal) contrayendo dorsales.",
+      "Sube controlando hasta estiramiento total de dorsales."
+    ],
+    "instructions_en": [
+      "Overhand grip slightly wider than shoulders, or neutral.",
+      "Sit with thighs under pad, slight backward lean.",
+      "Pull bar to upper chest, contracting lats.",
+      "Control up to full lat stretch."
+    ],
+    "cues_es": ["Codos van hacia los bolsillos traseros", "Pecho abierto, no encorvarte"],
+    "cues_en": ["Drive elbows to back pockets", "Open chest, don't hunch"],
+    "default_reps": "8-12",
+    "default_rest_seconds": 105,
+    "rpe_target": 8,
+    "contraindications": ["shoulder_impingement_severe", "cervical_pain"],
+    "tempo": "2-1-2-1",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "seated_row_machine",
+    "name_es": "Remo sentado en máquina",
+    "name_en": "Seated row machine",
+    "category": "compound",
+    "pattern": "horizontal_pull",
+    "primary_muscles": ["latissimus_dorsi", "rhomboids", "trapezius_middle"],
+    "secondary_muscles": ["biceps_brachii", "brachialis", "erector_spinae"],
+    "equipment_id": "seated_row",
+    "image_path": "assets/images/exercises/seated_row_machine.png",
+    "instructions_es": [
+      "Pecho contra el apoyo, agarra los mangos.",
+      "Tira llevando los codos atrás del torso, escápulas juntas.",
+      "Vuelve estirando brazos al frente sin redondear la espalda baja.",
+      "Mantén el pecho apoyado durante toda la repetición."
+    ],
+    "instructions_en": [
+      "Chest against pad, grip handles.",
+      "Pull elbows behind torso, scapulae retracted.",
+      "Return to full arm extension without rounding low back.",
+      "Keep chest on pad throughout."
+    ],
+    "cues_es": ["Codos atrás, no arriba", "Aprieta escápulas al final"],
+    "cues_en": ["Elbows back, not up", "Squeeze scapulae at end"],
+    "default_reps": "8-12",
+    "default_rest_seconds": 105,
+    "rpe_target": 8,
+    "contraindications": ["lower_back_pain_severe"],
+    "tempo": "2-1-2-1",
+    "source_research": "Schoenfeld 2020"
+  },
+  {
+    "id": "shoulder_press_machine",
+    "name_es": "Press de hombros en máquina",
+    "name_en": "Shoulder press machine",
+    "category": "compound",
+    "pattern": "vertical_push",
+    "primary_muscles": ["deltoid_anterior", "deltoid_lateral"],
+    "secondary_muscles": ["triceps_lateral", "triceps_long", "trapezius_upper"],
+    "equipment_id": "shoulder_press",
+    "image_path": "assets/images/exercises/shoulder_press_machine.png",
+    "instructions_es": [
+      "Asiento para que los mangos queden a la altura de los hombros.",
+      "Agarre neutro o prono, codos a 90°.",
+      "Empuja hacia arriba sin bloquear codos.",
+      "Baja controlando hasta que los codos queden a la altura de los hombros."
+    ],
+    "instructions_en": [
+      "Seat so handles align with shoulders.",
+      "Neutral or pronated grip, elbows 90°.",
+      "Press up without locking.",
+      "Lower until elbows at shoulder level."
+    ],
+    "cues_es": ["No arquees la espalda baja", "Empuja la cabeza entre los brazos"],
+    "cues_en": ["Don't arch low back", "Push head between arms"],
+    "default_reps": "8-12",
+    "default_rest_seconds": 120,
+    "rpe_target": 8,
+    "contraindications": ["shoulder_impingement_severe", "cervical_pain"],
+    "tempo": "3-1-2-0",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "lateral_raise_machine",
+    "name_es": "Elevaciones laterales en máquina",
+    "name_en": "Lateral raise machine",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["deltoid_lateral"],
+    "secondary_muscles": ["deltoid_anterior", "trapezius_upper"],
+    "equipment_id": "lateral_raise",
+    "image_path": "assets/images/exercises/lateral_raise_machine.png",
+    "instructions_es": [
+      "Apoya los brazos en los pads, agarra los mangos.",
+      "Eleva los brazos lateralmente hasta la altura de los hombros.",
+      "Baja controlando, sin que los pesos caigan."
+    ],
+    "instructions_en": [
+      "Rest arms on pads, grip handles.",
+      "Raise arms laterally to shoulder height.",
+      "Lower controlled, no slamming."
+    ],
+    "cues_es": ["Codos ligeramente flexionados", "Sin encoger los hombros"],
+    "cues_en": ["Slight elbow bend", "Don't shrug"],
+    "default_reps": "12-15",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": ["shoulder_impingement"],
+    "tempo": "2-1-2-1",
+    "source_research": "Schoenfeld 2020"
+  },
+  {
+    "id": "face_pull",
+    "name_es": "Face pull (polea)",
+    "name_en": "Face pull",
+    "category": "isolation",
+    "pattern": "horizontal_pull",
+    "primary_muscles": ["deltoid_posterior", "trapezius_middle", "rhomboids"],
+    "secondary_muscles": ["deltoid_lateral"],
+    "equipment_id": "cable_pulley",
+    "image_path": "assets/images/exercises/face_pull.png",
+    "instructions_es": [
+      "Polea alta con cuerda, da un paso atrás.",
+      "Coge la cuerda con palmas mirándose.",
+      "Tira de la cuerda hacia la cara abriendo los codos.",
+      "Vuelve controlando."
+    ],
+    "instructions_en": [
+      "High pulley with rope, step back.",
+      "Grip rope with palms facing each other.",
+      "Pull rope to face, flaring elbows.",
+      "Control the return."
+    ],
+    "cues_es": ["Codos altos, manos a la altura de las orejas", "Aprieta escápulas"],
+    "cues_en": ["High elbows, hands at ear level", "Squeeze scapulae"],
+    "default_reps": "12-15",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": [],
+    "tempo": "2-1-2-1",
+    "source_research": "Contreras 2014"
+  },
+  {
+    "id": "cable_tricep_pushdown",
+    "name_es": "Extensión de tríceps en polea",
+    "name_en": "Cable tricep pushdown",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["triceps_lateral", "triceps_long"],
+    "secondary_muscles": [],
+    "equipment_id": "cable_pulley",
+    "image_path": "assets/images/exercises/cable_tricep_pushdown.png",
+    "instructions_es": [
+      "Polea alta con barra recta o cuerda.",
+      "Codos pegados al torso, antebrazos a 90° al inicio.",
+      "Extiende los codos hasta que los antebrazos queden paralelos al suelo.",
+      "Vuelve a 90° sin mover los codos."
+    ],
+    "instructions_en": [
+      "High pulley, straight bar or rope.",
+      "Elbows pinned to torso, forearms 90° at start.",
+      "Extend elbows until forearms parallel to floor.",
+      "Return to 90°, elbows fixed."
+    ],
+    "cues_es": ["Codos quietos, solo antebrazos", "Aprieta tríceps abajo"],
+    "cues_en": ["Elbows still, only forearms move", "Squeeze triceps at bottom"],
+    "default_reps": "10-15",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": ["elbow_tendinopathy"],
+    "tempo": "2-1-2-0",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "cable_bicep_curl",
+    "name_es": "Curl de bíceps en polea",
+    "name_en": "Cable bicep curl",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["biceps_brachii", "brachialis"],
+    "secondary_muscles": [],
+    "equipment_id": "cable_pulley",
+    "image_path": "assets/images/exercises/cable_bicep_curl.png",
+    "instructions_es": [
+      "Polea baja con barra recta o cuerda.",
+      "Codos al frente del torso, fijos durante toda la repetición.",
+      "Lleva las manos a los hombros, contrayendo bíceps.",
+      "Baja controlando hasta extensión completa."
+    ],
+    "instructions_en": [
+      "Low pulley, straight bar or rope.",
+      "Elbows in front of torso, fixed throughout.",
+      "Bring hands to shoulders, contracting biceps.",
+      "Lower controlled to full extension."
+    ],
+    "cues_es": ["Codos quietos", "Aprieta bíceps arriba"],
+    "cues_en": ["Elbows still", "Squeeze at top"],
+    "default_reps": "10-15",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": ["elbow_tendinopathy"],
+    "tempo": "2-1-2-0",
+    "source_research": "Schoenfeld 2020"
+  },
+  {
+    "id": "leg_press",
+    "name_es": "Prensa de piernas",
+    "name_en": "Leg press",
+    "category": "compound",
+    "pattern": "squat",
+    "primary_muscles": ["quadriceps", "gluteus_maximus"],
+    "secondary_muscles": ["hamstrings"],
+    "equipment_id": "leg_press",
+    "image_path": "assets/images/exercises/leg_press.png",
+    "instructions_es": [
+      "Siéntate con la espalda bien apoyada.",
+      "Pies en la plataforma a la anchura de hombros, dedos ligeramente hacia fuera.",
+      "Baja el peso flexionando rodillas a 90° (o más según flexibilidad).",
+      "Empuja sin bloquear rodillas arriba."
+    ],
+    "instructions_en": [
+      "Sit with back fully against pad.",
+      "Feet shoulder-width on platform, toes slightly out.",
+      "Lower until knees at 90° (or deeper).",
+      "Press without locking knees."
+    ],
+    "cues_es": ["Baja profundo pero sin que la cadera se despegue del asiento", "Rodillas alineadas con dedos"],
+    "cues_en": ["Go deep but keep hips on seat", "Knees track over toes"],
+    "default_reps": "10-15",
+    "default_rest_seconds": 120,
+    "rpe_target": 8,
+    "contraindications": ["knee_pain_severe", "lower_back_pain"],
+    "tempo": "3-1-2-0",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "hack_squat",
+    "name_es": "Hack squat en máquina",
+    "name_en": "Hack squat machine",
+    "category": "compound",
+    "pattern": "squat",
+    "primary_muscles": ["quadriceps", "gluteus_maximus"],
+    "secondary_muscles": ["hamstrings"],
+    "equipment_id": "hack_squat",
+    "image_path": "assets/images/exercises/hack_squat.png",
+    "instructions_es": [
+      "Espalda contra el respaldo, hombros bajo los pads.",
+      "Pies algo más adelante que en sentadilla libre.",
+      "Baja hasta que los muslos queden paralelos al suelo o más.",
+      "Empuja arriba sin bloquear."
+    ],
+    "instructions_en": [
+      "Back against pad, shoulders under pads.",
+      "Feet slightly forward of squat stance.",
+      "Lower until thighs parallel or deeper.",
+      "Press up without locking."
+    ],
+    "cues_es": ["Mantén la espalda contra el respaldo todo el rango", "Baja profundo si no hay dolor"],
+    "cues_en": ["Keep back against pad throughout", "Go deep if pain-free"],
+    "default_reps": "8-12",
+    "default_rest_seconds": 120,
+    "rpe_target": 8,
+    "contraindications": ["knee_pain", "lower_back_pain"],
+    "tempo": "3-1-2-0",
+    "source_research": "Contreras 2014"
+  },
+  {
+    "id": "leg_extension",
+    "name_es": "Extensión de piernas",
+    "name_en": "Leg extension",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["quadriceps"],
+    "secondary_muscles": [],
+    "equipment_id": "leg_extension",
+    "image_path": "assets/images/exercises/leg_extension.png",
+    "instructions_es": [
+      "Asiento con la rodilla alineada con el eje de la máquina.",
+      "Pad en el tobillo.",
+      "Extiende la rodilla hasta que la pierna quede horizontal.",
+      "Baja controlando, sin que el peso caiga."
+    ],
+    "instructions_en": [
+      "Seat with knee aligned with machine axis.",
+      "Pad on ankle.",
+      "Extend knee until leg horizontal.",
+      "Lower controlled."
+    ],
+    "cues_es": ["Aprieta cuádriceps arriba", "Sin impulso"],
+    "cues_en": ["Squeeze quads at top", "No swing"],
+    "default_reps": "12-15",
+    "default_rest_seconds": 75,
+    "rpe_target": 8,
+    "contraindications": ["knee_pain", "patellar_tendinopathy"],
+    "tempo": "2-1-2-1",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "leg_curl",
+    "name_es": "Curl femoral (acostado o sentado)",
+    "name_en": "Leg curl",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["hamstrings"],
+    "secondary_muscles": ["gastrocnemius"],
+    "equipment_id": "leg_curl",
+    "image_path": "assets/images/exercises/leg_curl.png",
+    "instructions_es": [
+      "Acostado boca abajo (o sentado) con la rodilla alineada con el eje.",
+      "Pad en el tobillo.",
+      "Flexiona la rodilla llevando el talón al glúteo.",
+      "Vuelve controlando sin extender del todo si hay molestia."
+    ],
+    "instructions_en": [
+      "Prone (or seated) with knee aligned with axis.",
+      "Pad on ankle.",
+      "Flex knee, bringing heel to glute.",
+      "Return controlled."
+    ],
+    "cues_es": ["Caderas pegadas al asiento", "Aprieta isquios al final"],
+    "cues_en": ["Hips glued to seat", "Squeeze hamstrings at top"],
+    "default_reps": "10-15",
+    "default_rest_seconds": 75,
+    "rpe_target": 8,
+    "contraindications": ["hamstring_strain_recent"],
+    "tempo": "2-1-2-1",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "standing_calf_raise",
+    "name_es": "Elevación de gemelos de pie",
+    "name_en": "Standing calf raise",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["gastrocnemius"],
+    "secondary_muscles": ["soleus"],
+    "equipment_id": "calf_raise",
+    "image_path": "assets/images/exercises/standing_calf_raise.png",
+    "instructions_es": [
+      "Hombros bajo los pads, puntas de los pies en el escalón.",
+      "Empuja con los dedos subiendo lo más alto posible.",
+      "Baja controlando hasta máximo estiramiento."
+    ],
+    "instructions_en": [
+      "Shoulders under pads, balls of feet on platform edge.",
+      "Push up onto toes as high as possible.",
+      "Lower to full stretch."
+    ],
+    "cues_es": ["Rango completo", "Pausa abajo estirando"],
+    "cues_en": ["Full ROM", "Pause at stretch"],
+    "default_reps": "10-15",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": ["achilles_tendinopathy"],
+    "tempo": "2-2-1-1",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "seated_calf_raise",
+    "name_es": "Elevación de gemelos sentado",
+    "name_en": "Seated calf raise",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["soleus"],
+    "secondary_muscles": ["gastrocnemius"],
+    "equipment_id": "seated_calf_raise",
+    "image_path": "assets/images/exercises/seated_calf_raise.png",
+    "instructions_es": [
+      "Sentado, rodillas bajo los pads, puntas de los pies en el escalón.",
+      "Empuja hacia arriba con los dedos.",
+      "Baja controlando."
+    ],
+    "instructions_en": [
+      "Seated, knees under pads, balls of feet on edge.",
+      "Push up onto toes.",
+      "Lower controlled."
+    ],
+    "cues_es": ["Rodillas a 90°", "Rango completo"],
+    "cues_en": ["Knees at 90°", "Full ROM"],
+    "default_reps": "12-20",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": ["achilles_tendinopathy"],
+    "tempo": "2-2-1-1",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "hip_thrust_machine",
+    "name_es": "Hip thrust en máquina",
+    "name_en": "Hip thrust machine",
+    "category": "compound",
+    "pattern": "hinge",
+    "primary_muscles": ["gluteus_maximus"],
+    "secondary_muscles": ["hamstrings", "erector_spinae"],
+    "equipment_id": "hip_thrust",
+    "image_path": "assets/images/exercises/hip_thrust_machine.png",
+    "instructions_es": [
+      "Espalda contra el respaldo, pies en la plataforma a anchura de cadera.",
+      "Empuja con los talones llevando la cadera hacia delante.",
+      "Arriba, aprieta glúteos sin hiperextender la lumbar.",
+      "Baja controlando."
+    ],
+    "instructions_en": [
+      "Back against pad, feet hip-width on platform.",
+      "Drive through heels, hips forward.",
+      "At top, squeeze glutes without hyperextending.",
+      "Lower controlled."
+    ],
+    "cues_es": ["Mentón hacia el pecho", "Aprieta glúteos arriba 1-2s"],
+    "cues_en": ["Chin tucked", "Squeeze glutes 1-2s at top"],
+    "default_reps": "8-12",
+    "default_rest_seconds": 120,
+    "rpe_target": 8,
+    "contraindications": ["lower_back_pain"],
+    "tempo": "2-2-1-0",
+    "source_research": "Contreras 2014"
+  },
+  {
+    "id": "hip_abductor",
+    "name_es": "Abductor de cadera",
+    "name_en": "Hip abductor machine",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["gluteus_medius"],
+    "secondary_muscles": ["gluteus_maximus"],
+    "equipment_id": "hip_abductor",
+    "image_path": "assets/images/exercises/hip_abductor.png",
+    "instructions_es": [
+      "Sentado, rodillas contra los pads.",
+      "Empuja las rodillas hacia fuera contra los pads.",
+      "Vuelve controlando, sin que las pesas choquen."
+    ],
+    "instructions_en": [
+      "Seated, knees against pads.",
+      "Push knees outward against pads.",
+      "Return controlled."
+    ],
+    "cues_es": ["Mantén la espalda contra el respaldo", "Sin impulso"],
+    "cues_en": ["Back against pad", "No momentum"],
+    "default_reps": "12-15",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": ["hip_impingement"],
+    "tempo": "2-1-2-1",
+    "source_research": "Schoenfeld 2020"
+  },
+  {
+    "id": "cable_crunch",
+    "name_es": "Crunch en polea",
+    "name_en": "Cable crunch",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["rectus_abdominis"],
+    "secondary_muscles": ["obliques"],
+    "equipment_id": "cable_pulley",
+    "image_path": "assets/images/exercises/cable_crunch.png",
+    "instructions_es": [
+      "Arrodillado frente a polea alta con cuerda.",
+      "Coge la cuerda detrás de la cabeza.",
+      "Flexiona el tronco llevando los codos hacia las rodillas.",
+      "Vuelve controlando sin hiperextender la lumbar."
+    ],
+    "instructions_en": [
+      "Kneeling facing high pulley with rope.",
+      "Hold rope behind head.",
+      "Flex torso, bringing elbows to knees.",
+      "Return controlled."
+    ],
+    "cues_es": ["Enrolla la columna vértebra a vértebra", "No tires con los brazos"],
+    "cues_en": ["Roll spine vertebra by vertebra", "Don't pull with arms"],
+    "default_reps": "12-20",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": ["lower_back_pain"],
+    "tempo": "2-1-2-1",
+    "source_research": "Schoenfeld 2020"
+  },
+  {
+    "id": "back_extension",
+    "name_es": "Extensión lumbar en máquina",
+    "name_en": "Back extension",
+    "category": "compound",
+    "pattern": "hinge",
+    "primary_muscles": ["erector_spinae", "gluteus_maximus"],
+    "secondary_muscles": ["hamstrings"],
+    "equipment_id": "back_extension",
+    "image_path": "assets/images/exercises/back_extension.png",
+    "instructions_es": [
+      "Ajusta el eje a la altura de la cadera.",
+      "Pad contra la parte baja de la espalda.",
+      "Baja flexionando cadera hasta que el torso quede horizontal.",
+      "Sube extendiendo cadera y espalda hasta la línea neutra (no hiperextender)."
+    ],
+    "instructions_en": [
+      "Axis at hip height.",
+      "Pad on lower back.",
+      "Lower by flexing hips to horizontal.",
+      "Extend hips and back to neutral (no hyperextension)."
+    ],
+    "cues_es": ["Movimiento desde la cadera", "No arquees arriba del neutro"],
+    "cues_en": ["Move from hips", "Don't arch above neutral"],
+    "default_reps": "10-15",
+    "default_rest_seconds": 75,
+    "rpe_target": 8,
+    "contraindications": ["lower_back_pain_severe", "disc_herniation"],
+    "tempo": "2-1-2-0",
+    "source_research": "NSCA 2021"
+  },
+  {
+    "id": "cable_pullover",
+    "name_es": "Pullover en polea",
+    "name_en": "Cable pullover",
+    "category": "isolation",
+    "pattern": "vertical_pull",
+    "primary_muscles": ["latissimus_dorsi"],
+    "secondary_muscles": ["pectoralis_major_sternal", "triceps_long"],
+    "equipment_id": "cable_pulley",
+    "image_path": "assets/images/exercises/cable_pullover.png",
+    "instructions_es": [
+      "Polea alta con barra o cuerda, de pie.",
+      "Codos ligeramente flexionados y fijos.",
+      "Tira de la barra hacia las caderas, contrayendo dorsales.",
+      "Vuelve controlando sin hiperextender hombros."
+    ],
+    "instructions_en": [
+      "High pulley with bar or rope, standing.",
+      "Slight fixed elbow bend.",
+      "Pull bar to hips, contracting lats.",
+      "Return controlled."
+    ],
+    "cues_es": ["Codos quietos", "Aprieta dorsales abajo"],
+    "cues_en": ["Elbows still", "Squeeze lats at bottom"],
+    "default_reps": "10-15",
+    "default_rest_seconds": 75,
+    "rpe_target": 8,
+    "contraindications": ["shoulder_impingement"],
+    "tempo": "2-1-2-1",
+    "source_research": "Schoenfeld 2020"
+  },
+  {
+    "id": "reverse_pec_deck",
+    "name_es": "Pec deck inverso (deltoides posterior)",
+    "name_en": "Reverse pec deck",
+    "category": "isolation",
+    "pattern": "horizontal_pull",
+    "primary_muscles": ["deltoid_posterior"],
+    "secondary_muscles": ["rhomboids", "trapezius_middle"],
+    "equipment_id": "pec_deck",
+    "image_path": "assets/images/exercises/reverse_pec_deck.png",
+    "instructions_es": [
+      "Sentado de cara a la máquina, agarra los mangos con codos a 90°.",
+      "Abre los brazos tirando de los codos hacia atrás.",
+      "Aprieta escápulas al final.",
+      "Vuelve controlando."
+    ],
+    "instructions_en": [
+      "Seated facing machine, grip with elbows 90°.",
+      "Open arms, pulling elbows back.",
+      "Squeeze scapulae.",
+      "Return controlled."
+    ],
+    "cues_es": ["Codos a la altura de los hombros", "Sin encoger trapecio"],
+    "cues_en": ["Elbows at shoulder height", "Don't shrug"],
+    "default_reps": "12-15",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": [],
+    "tempo": "2-1-2-1",
+    "source_research": "Schoenfeld 2020"
+  },
+  {
+    "id": "cable_lateral_raise",
+    "name_es": "Elevación lateral en polea (unilateral)",
+    "name_en": "Cable lateral raise",
+    "category": "isolation",
+    "pattern": "isolation",
+    "primary_muscles": ["deltoid_lateral"],
+    "secondary_muscles": ["deltoid_anterior", "trapezius_upper"],
+    "equipment_id": "cable_pulley",
+    "image_path": "assets/images/exercises/cable_lateral_raise.png",
+    "instructions_es": [
+      "Polea baja con mango, de pie con el lado de la polea.",
+      "Coge el mango con la mano alejada de la polea.",
+      "Eleva el brazo lateralmente hasta la altura del hombro.",
+      "Baja controlando."
+    ],
+    "instructions_en": [
+      "Low pulley, standing on the side opposite the working arm.",
+      "Grip handle with far hand.",
+      "Raise arm laterally to shoulder height.",
+      "Lower controlled."
+    ],
+    "cues_es": ["Codo ligeramente flexionado", "Pulgar hacia arriba al final"],
+    "cues_en": ["Slight elbow bend", "Thumb up at top"],
+    "default_reps": "12-15",
+    "default_rest_seconds": 60,
+    "rpe_target": 8,
+    "contraindications": ["shoulder_impingement"],
+    "tempo": "2-1-2-1",
+    "source_research": "Schoenfeld 2020"
+  }
+]
