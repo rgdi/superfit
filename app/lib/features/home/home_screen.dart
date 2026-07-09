@@ -9,6 +9,8 @@ import '../../data/models/workout_session.dart';
 import '../../domain/usecases/cycle_planner.dart';
 import '../../domain/usecases/routine_recommender.dart';
 import '../routines/routines_screen.dart';
+import '../../widgets/visual_widgets.dart';
+import '../../domain/usecases/advanced_analytics.dart';
 import '../history/history_screen.dart';
 import '../progress/progress_screen.dart';
 import '../settings/settings_screen.dart';
@@ -134,6 +136,21 @@ class _HomeTab extends ConsumerWidget {
     );
   }
 
+
+  Widget _fatigueCard(WidgetRef ref) {
+    return FutureBuilder(
+      future: AdvancedAnalytics(ref.read(setRepoProvider)).detectFatigue(),
+      builder: (context, snap) {
+        if (!snap.hasData || snap.data!.totalSets7d == 0) {
+          return const SizedBox.shrink();
+        }
+        return FatigueRing(
+          fatigue: snap.data!.fatigueIndex,
+          recommendation: snap.data!.recommendation,
+        );
+      },
+    );
+  }
   Widget _todayCard(BuildContext context, WidgetRef ref, AsyncSnapshot<RoutineRecommendation> snap, String locale) {
     if (snap.connectionState == ConnectionState.waiting) {
       return const Card(

@@ -1,73 +1,71 @@
-# SuperFit
+# 🎯 SuperFit
 
-> **La app de gimnasio que se adapta a ti.** Auto-hospedada en tu Android, sin cuentas, sin nube, sin tracking. Tus datos son tuyos.
+> **La app de gimnasio que se adapta a ti. 100% offline. Basada en evidencia científica.**
 
-**Tagline:** máximo músculo en mínimo tiempo, con mantenimiento inteligente.
+[![Build APK](https://github.com/rgdi/superfit/actions/workflows/build.yml/badge.svg)](https://github.com/rgdi/superfit/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Flutter 3.24](https://img.shields.io/badge/Flutter-3.24-02569B?logo=flutter)](https://flutter.dev)
+[![Dart 3.5](https://img.shields.io/badge/Dart-3.5-0175C2?logo=dart)](https://dart.dev)
 
-## ¿Qué es?
+**[⬇️ Descargar APK](https://github.com/rgdi/superfit/releases)** · **[📚 Documentación](docs/)** · **[🔬 Research](research/)**
 
-App Flutter 100% offline para Android que:
+---
 
-- Te dice **la rutina del día** optimizada para tu nivel y objetivo.
-- Registra **series, peso, RPE y notas** de cada sesión.
-- Aprende de tu rendimiento y **adapta pesos, volumen y descansos**.
-- Lleva una **galería de progreso físico** (fotos + métricas + 1RM estimado) por fecha.
-- Se basa en los **mayores meta-análisis del mundo** sobre hipertrofia (Schoenfeld, NSCA, ACSM).
+## ✨ Features
 
-## Estructura del repo
+- 🧠 **Adaptativa** — aprende de tu RPE, adherencia y PRs; ajusta pesos, descansos y ejercicios
+- 🔬 **Científica** — basada en meta-análisis de Schoenfeld, NSCA, ACSM, Helms (10 PMIDs verificados)
+- 📊 **Upper/Lower 4×/semana** — frecuencia 2×/grupo, 38 min por sesión
+- 🖼️ **Mapa muscular interactivo** — silueta con músculos activados por ejercicio (22 músculos)
+- 📷 **Galería de progreso** — fotos por fecha con comparador lado a lado
+- 💯 **RPE-based auto-regulación** — doble progresión + detección de meseta
+- 🔒 **100% privada** — sin cuentas, sin nube, sin tracking. Tus datos viven en tu dispositivo
 
-```
-superfit/
-├── research/         # 6 documentos científicos con PMIDs (Fase 1)
-├── assets/           # JSONs + imágenes (Fase 2 + 6)
-├── app/              # Proyecto Flutter (Fases 3-9)
-├── scripts/          # Python: generar imágenes, verificar PMIDs
-├── docs/             # Decisiones de arquitectura (ADRs)
-├── PLAN.md           # Plan completo de 9 fases
-└── CHANGELOG.md
-```
+## 🏋️ Catálogo
 
-## Quick start (en tu PC con Flutter instalado)
+| | |
+|---|---|
+| 24 ejercicios | 18 máquinas |
+| 6 rutinas | 1 plan 4 semanas |
+| 22 músculos mapeados | 10 PMIDs verificados |
+
+## 📦 Build local
 
 ```bash
-# 1. Clona o copia esta carpeta
-cd superfit/app
-
-# 2. Instala dependencias
+cd app
 flutter pub get
-
-# 3. Genera modelos (freezed)
-dart run build_runner build --delete-conflicting-outputs
-
-# 4. Ejecuta en Android
-flutter run
+flutter run                      # device/emulator
+flutter build apk --release       # APK release
 ```
 
-## Build APK release
+## 🤖 Build automático
 
-```bash
-cd superfit/app
-flutter build apk --release --split-per-abi
-# Output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-```
+Cada `git push` genera un APK vía [GitHub Actions](.github/workflows/build.yml).
+En tags `v*` se publica release automática.
 
-## Generar imágenes (siluetas, máquinas, diagramas)
+## 🧬 Algoritmos
 
-```bash
-cd superfit/scripts
-pip install pillow
-python3 gen_muscle_maps.py
-python3 gen_exercise_diagrams.py
-python3 gen_machines.py
-```
+- **Doble progresión** (Helms 2014): sube peso al completar reps objetivo a RPE ≤ target dos veces seguidas
+- **Detección de meseta** (custom): 3+ semanas sin subir peso → propone variante
+- **RPE auto-regulación** (Zourdos 2016): RPE ≥ 9 → -5% peso; RPE ≤ 7 → +2.5kg
+- **Cycle planning 4:1** (Coleman 2014): 3 semanas carga + 1 deload
+- **1RM Epley** (Epley 1985): `peso × (1 + reps/30)`
+- **Fatigue detection**: RPE promedio 7 días > 8.5 → sugerir deload
 
-## Filosofía
+## 📚 Documentación
 
-- **On-device only**: nada de servidor, nada de login, nada de telemetría.
-- **Basado en evidencia**: cada decisión de entrenamiento cita un PMID o DOI verificable.
-- **Adaptable**: aprende de tus PRs, RPE, descansos y adherence.
-- **Sin distracciones**: UX mínima, sin notificaciones invasivas, sin ads.
+- [Plan completo](PLAN.md) — 9 fases
+- [Research con PMIDs](research/) — 7 documentos verificados
+- [Arquitectura](docs/ARCHITECTURE.md) — ADRs
+- [Build](docs/BUILD.md) — instrucciones
+- [Manual usuario](docs/USER_GUIDE.md)
 
-## Licencia
+## 📜 Licencia
 
 MIT. Hecho con evidencia, para gente que quiere resultados.
+
+---
+
+<p align="center">
+  <sub>Built with 💪 for the iron game</sub>
+</p>
