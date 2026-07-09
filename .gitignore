@@ -1,0 +1,50 @@
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+*.lock
+!pubspec.lock
+
+# Android
+android/.gradle
+android/captures/
+android/local.properties
+android/**/GeneratedPluginRegistrant.java
+android/key.properties
+*.jks
+*.keystore
+
+# Misc
+*.log
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+.DS_Store
+Thumbs.db
+coverage/
+
+# Generated images (regenerable)
+assets/images/exercises/*.png
+assets/images/machines/*.png
+assets/images/muscles/*.png
+!assets/images/exercises/.gitkeep
+!assets/images/machines/.gitkeep
+!assets/images/muscles/.gitkeep
+
+# OS
+*~
+.directory
+
+# Hermes
+.hermes/
