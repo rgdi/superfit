@@ -41,31 +41,29 @@ jobs:
           cache: true
 
       - name: 📦 Get dependencies
-        run: |
-          cd app
-          flutter pub get
+        working-directory: app
+        run: flutter pub get
 
       - name: 🔍 Analyze
-        run: |
-          cd app
-          flutter analyze --no-fatal-warnings --no-fatal-infos
+        working-directory: app
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
       - name: 🧪 Test
-        run: |
-          cd app
-          flutter test
+        working-directory: app
+        run: flutter test
 
       - name: 🖼️ Generate images
         run: |
-          pip install pillow
+          mkdir -p app/assets/svg
+          pip install --quiet pillow
           python3 scripts/gen_muscle_maps.py
           python3 scripts/gen_exercise_diagrams.py
           python3 scripts/gen_machines.py
-          cp -r app/assets/images/* app/assets/images/
+          python3 scripts/gen_app_icon.py
 
       - name: 🏗️ Build APK
+        working-directory: app
         run: |
-          cd app
           if [ "${{ github.event.inputs.build_type }}" = "debug" ] || [ "${{ github.event_name }}" = "pull_request" ]; then
             flutter build apk --debug --split-per-abi
           else
