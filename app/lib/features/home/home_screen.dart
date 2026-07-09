@@ -10,6 +10,7 @@ import '../../domain/usecases/cycle_planner.dart';
 import '../../domain/usecases/routine_recommender.dart';
 import '../routines/routines_screen.dart';
 import '../../widgets/visual_widgets.dart';
+import '../../widgets/hero_routine_card.dart';
 import '../../domain/usecases/advanced_analytics.dart';
 import '../history/history_screen.dart';
 import '../progress/progress_screen.dart';
@@ -180,66 +181,12 @@ class _HomeTab extends ConsumerWidget {
         ),
       );
     }
-    final r = rec.routine!;
-    return Card(
-      color: AppTheme.surfaceMid,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/routines/${r.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text('HOY', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
-                  const Spacer(),
-                  Text('${r.estimatedMinutes} min', style: const TextStyle(color: Colors.white60)),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                r.localizedName(locale),
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                rec.reason ?? '',
-                style: const TextStyle(color: Colors.white60, fontSize: 12),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  ...r.workout.take(4).map((w) => Chip(
-                    label: Text(
-                      w.exerciseId.replaceAll('_', ' '),
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                    backgroundColor: AppTheme.surfaceLight,
-                    padding: EdgeInsets.zero,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  )),
-                  if (r.workout.length > 4)
-                    Chip(
-                      label: Text('+${r.workout.length - 4}'),
-                      backgroundColor: AppTheme.surfaceLight,
-                      padding: EdgeInsets.zero,
-                    ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: () => _startRoutine(context, ref, r),
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('EMPEZAR'),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return HeroRoutineCard(
+      routine: rec.routine!,
+      reason: rec.reason ?? '',
+      locale: locale,
+      onView: () => context.push('/routines/${rec.routine!.id}'),
+      onStart: () => _startRoutine(context, ref, rec.routine!),
     );
   }
 
