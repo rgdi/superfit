@@ -44,8 +44,8 @@ dependencies:
   json_annotation: ^4.9.0
 
   # UX
-  wakelock_plus: ^1.2.8
-  flutter_local_notifications: ^17.2.3
+  wakelock_plus: ^1.2.5
+  flutter_local_notifications: ^16.3.3
   confetti: ^0.7.0
   flutter_animate: ^4.5.0
 
