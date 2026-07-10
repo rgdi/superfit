@@ -7,6 +7,8 @@ import '../data/repositories/photo_repo.dart';
 import '../data/repositories/body_metric_repo.dart';
 import '../data/repositories/settings_repo.dart';
 import '../data/models/user_settings.dart';
+import 'package:sqflite/sqflite.dart';
+import 'db/db_helper.dart';
 import '../domain/usecases/progression_service.dart';
 
 final catalogRepoProvider = Provider<CatalogRepo>((ref) => CatalogRepo());
@@ -51,6 +53,15 @@ final progressionServiceProvider = Provider<ProgressionService>(
 
 final cyclePlannerProvider = Provider<dynamic>((ref) {
   return null; // se inicializa en un provider async
+});
+
+
+final databaseProvider = FutureProvider<Database>((ref) async {
+  return DBHelper.database;
+});
+
+final allSessionsProvider = FutureProvider<List<dynamic>>((ref) async {
+  return ref.read(sessionRepoProvider).recentSessions(limit: 100);
 });
 
 final onboardingDoneProvider = FutureProvider<bool>(

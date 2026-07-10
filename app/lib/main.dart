@@ -19,6 +19,7 @@ import 'features/progress_photos/photo_compare_screen.dart';
 import 'features/settings/settings_screen.dart';
 
 import 'features/insights/insights_screen.dart';
+import 'features/backup/backup_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: SuperFitApp()));
@@ -84,6 +85,7 @@ class SuperFitApp extends ConsumerWidget {
         ),
         GoRoute(path: '/insights', builder: (_, __) => const InsightsScreen()),
         GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+        GoRoute(path: '/settings/backup', builder: (_, __) => const BackupScreen()),
       ],
     );
 
