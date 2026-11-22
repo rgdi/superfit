@@ -17,6 +17,7 @@
 - 🏋️ **Tus máquinas** — registra tus Technogym (u otras) desde Ajustes: nombre, pila de pesos y ajuste de asiento
 - 🤖 **IA local que aprende de ti** — modelo entrenado en tu móvil con tus series: afina pesos, predice tus reps y mide su propio acierto
 - ⚖️ **Pesos reales** — pila exacta + microcargas, historial por máquina, aproximación / top set + back-off / drop sets
+- 🎬 **Técnica con fotos reales animadas** — cada ejercicio con sus dos posiciones alternando al ritmo del tempo
 - 🗺️ **Mapa muscular** — volumen semanal y recuperación por músculo en un mapa corporal interactivo
 - ⚡ **Máquinas más eficientes** — el mínimo de máquinas que trabaja todos tus músculos (Esencial / Completo)
 - 📷 **Escanea la máquina** — el QR (o NFC) que llevan las Technogym te lleva directo a ese ejercicio con el peso listo
@@ -31,7 +32,7 @@
 
 | | |
 |---|---|
-| 24 ejercicios | 18 máquinas |
+| 29 ejercicios con fotos reales | 24 tipos de máquina |
 | 6 rutinas | 1 plan 4 semanas |
 | 22 músculos mapeados | 10 PMIDs verificados |
 
@@ -79,3 +80,7 @@ MIT. Hecho con evidencia, para gente que quiere resultados.
 <p align="center">
   <sub>Built with 💪 for the iron game</sub>
 </p>
+
+## Créditos
+
+Fotos de ejercicios: [Free Exercise DB](https://github.com/yuhonas/free-exercise-db) (dominio público). Siluetas anatómicas: [react-body-highlighter](https://github.com/GV79/react-body-highlighter) (MIT). Ver [`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md).

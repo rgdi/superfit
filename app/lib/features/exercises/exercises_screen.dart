@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/exercise_animation.dart';
 import '../../data/models/exercise.dart';
 
 class ExercisesScreen extends ConsumerStatefulWidget {
@@ -66,7 +67,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       child: ListTile(
                         onTap: () => context.push('/exercises/${e.id}'),
-                        leading: const Icon(Icons.fitness_center, color: AppTheme.primary),
+                        leading: ExerciseThumb(e.id),
                         title: Text(e.localizedName(settings.locale)),
                         subtitle: Text(
                           '${e.category == "compound" ? "Compuesto" : "Aislamiento"} · ${e.primaryMuscles.length} músculos',

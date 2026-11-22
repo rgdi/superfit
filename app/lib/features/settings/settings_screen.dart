@@ -120,8 +120,14 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           const _SectionHeader('Acerca de'),
           const ListTile(
-            title: Text('SuperFit v1.3.0'),
+            title: Text('SuperFit v1.4.0'),
             subtitle: Text('100% offline · sin tracking'),
+          ),
+          ListTile(
+            title: const Text('Licencias y créditos'),
+            subtitle: const Text('Fotos: Free Exercise DB · Anatomía: react-body-highlighter'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showLicensePage(context: context, applicationName: 'SuperFit'),
           ),
           ListTile(
             title: const Text('Cómo decide la app'),

@@ -266,7 +266,7 @@ void main() {
     // Pestaña de máquinas eficientes
     await t.tap(find.text('Máquinas eficientes'));
     await settle(t);
-    expect(find.text('Press de pecho en máquina'), findsWidgets);
+    expect(find.textContaining('Press de pecho en máquina'), findsWidgets);
     await t.tap(find.text('Completo'));
     await settle(t);
     await t.dragUntilVisible(find.text('Usar como mi programa'), find.byType(ListView).last, const Offset(0, -300));

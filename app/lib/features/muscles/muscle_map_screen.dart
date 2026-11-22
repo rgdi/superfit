@@ -15,6 +15,8 @@ import '../../domain/engine/efficiency.dart';
 import '../../domain/engine/muscle_stats.dart';
 import '../../domain/engine/program_generator.dart' show contraindicatedFor;
 import '../../widgets/body_heatmap.dart';
+import '../../widgets/exercise_animation.dart';
+import 'package:go_router/go_router.dart';
 
 class _Data {
   final List<Muscle> muscles;
@@ -397,15 +399,25 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: AppTheme.primary,
-            child: Text('$n', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800)),
-          ),
+          Stack(clipBehavior: Clip.none, children: [
+            ExerciseThumb(p.exercise.id, size: 64),
+            Positioned(
+              left: -6,
+              top: -6,
+              child: CircleAvatar(
+                radius: 12,
+                backgroundColor: AppTheme.primary,
+                child: Text('$n', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 12)),
+              ),
+            ),
+          ]),
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(p.exercise.nameEs, style: const TextStyle(fontWeight: FontWeight.w700)),
+              InkWell(
+                onTap: () => context.push('/exercises/${p.exercise.id}'),
+                child: Text('${p.exercise.nameEs}  ▸', style: const TextStyle(fontWeight: FontWeight.w700)),
+              ),
               if (m != null) Text(m.name, style: const TextStyle(fontSize: 12, color: Colors.white60)),
               const SizedBox(height: 6),
               Wrap(spacing: 4, runSpacing: 4, children: [

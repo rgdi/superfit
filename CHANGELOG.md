@@ -2,6 +2,20 @@
 
 Todas las versiones siguen [SemVer](https://semver.org/lang/es/).
 
+## [1.4.0] - 22 nov 2026
+
+### Realismo
+- **Fotos reales** de cómo se hace cada uno de los 29 ejercicios (2 posiciones por
+  ejercicio, máquinas reales), de Free Exercise DB (dominio público).
+- **Demostración animada**: las dos posiciones se alternan al ritmo del tempo del
+  ejercicio, con fundido, zoom suave, indicador de fase y mini mapa anatómico que late
+  con cada repetición. Toca para pausar. En la ficha del ejercicio y en el entreno.
+- **Mapa anatómico** con siluetas musculares reales (react-body-highlighter, MIT),
+  bordes suavizados, sombreado de volumen, fibras y brillo en los músculos activos.
+  Sustituye a los óvalos en todo la app.
+- Miniaturas con foto en la lista de ejercicios, el programa y las máquinas eficientes.
+- Pantalla "Licencias y créditos".
+
 ## [1.3.0] - 22 nov 2026
 
 ### Mapa muscular

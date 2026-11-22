@@ -9,6 +9,7 @@ import '../../data/models/generated_program.dart';
 import '../../data/models/training_profile.dart';
 import '../../domain/engine/program_coach.dart';
 import '../../domain/engine/program_generator.dart';
+import '../../widgets/exercise_animation.dart';
 
 class ProgramScreen extends ConsumerWidget {
   const ProgramScreen({super.key});
@@ -184,6 +185,8 @@ class ProgramScreen extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
+                          ExerciseThumb(it.exerciseId, size: 40),
+                          const SizedBox(width: 10),
                           Expanded(child: Text(byId[it.exerciseId]?.nameEs ?? it.exerciseId)),
                           Text('${it.sets} × ${it.repsTarget}', style: const TextStyle(color: Colors.white70)),
                         ],

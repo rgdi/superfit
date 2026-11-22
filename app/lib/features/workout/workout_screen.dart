@@ -26,7 +26,8 @@ import '../../domain/engine/cold_start.dart';
 import '../../domain/engine/load_engine.dart';
 import '../../domain/engine/program_coach.dart';
 import '../../domain/engine/program_generator.dart';
-import '../../widgets/muscle_map_widget.dart';
+import '../../widgets/body_heatmap.dart';
+import '../../widgets/exercise_animation.dart';
 import '../../widgets/rest_timer.dart';
 import '../../widgets/set_row.dart';
 import '../../widgets/tip_tier_widgets.dart';
@@ -332,6 +333,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         _banner(Icons.battery_2_bar, 'Modo "voy justo": 1 serie menos y RPE −1 en cada ejercicio.'),
       _header(ex, item),
       const SizedBox(height: 12),
+      ExerciseAnimation(exercise: ex, tempo: item.tempo, height: 210),
+      const SizedBox(height: 12),
       _machineCard(ex),
       const SizedBox(height: 12),
       _rxCard(ex, item),
@@ -365,14 +368,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
               padding: const EdgeInsets.only(top: 8),
               child: Text('💡 ${ex.cuesEs.join(' · ')}', style: const TextStyle(color: AppTheme.primary, fontSize: 12)),
             ),
-          SizedBox(
-            height: 200,
-            child: MuscleMapWidget(
-              primaryMuscles: ex.primaryMuscles.toSet(),
-              secondaryMuscles: ex.secondaryMuscles.toSet(),
-              view: _isFront(ex) ? 'front' : 'back',
-            ),
-          ),
+          BodyHeatmap(colors: exerciseMuscleColors(ex.primaryMuscles, ex.secondaryMuscles), height: 260),
         ],
       ),
       const SizedBox(height: 16),
@@ -992,11 +988,6 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         ]),
       );
 
-  bool _isFront(Exercise ex) {
-    const front = ['pectoralis', 'deltoid_anterior', 'deltoid_lateral', 'biceps', 'brachialis',
-      'rectus_abdominis', 'obliques', 'quadriceps', 'adductors'];
-    return ex.primaryMuscles.any((m) => front.any(m.contains));
-  }
 }
 
 class _SessionRpeDialog extends StatefulWidget {

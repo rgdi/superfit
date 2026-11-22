@@ -1,7 +1,7 @@
 name: superfit
 description: "SuperFit — App de gimnasio 100% offline con adaptación inteligente. Basada en evidencia científica."
 publish_to: 'none'
-version: 1.3.0+4
+version: 1.4.0+5
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -58,6 +58,7 @@ flutter:
     - assets/data/
     - assets/data/routines/
     - assets/images/exercises/
+    - assets/images/exercise_photos/
     - assets/images/machines/
     - assets/images/muscles/
     - assets/svg/

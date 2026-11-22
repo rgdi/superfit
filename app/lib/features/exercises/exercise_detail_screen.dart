@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/exercise.dart';
-import '../../widgets/muscle_map_widget.dart';
+import '../../widgets/body_heatmap.dart';
+import '../../widgets/exercise_animation.dart';
 
 class ExerciseDetailScreen extends ConsumerWidget {
   final String exerciseId;
@@ -36,6 +37,11 @@ class ExerciseDetailScreen extends ConsumerWidget {
                 style: const TextStyle(color: Colors.white60),
               ),
               const SizedBox(height: 16),
+              ExerciseAnimation(exercise: ex, height: 250),
+              const SizedBox(height: 6),
+              const Text('Toca para pausar · fotos reales de la ejecución',
+                  textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: Colors.white38)),
+              const SizedBox(height: 16),
               _muscleMapSection(ex),
               const SizedBox(height: 16),
               _paramsCard(ex),
@@ -55,11 +61,6 @@ class ExerciseDetailScreen extends ConsumerWidget {
   }
 
   Widget _muscleMapSection(Exercise ex) {
-    final frontView = ex.primaryMuscles.any((m) =>
-      m.contains('pectoralis') || m.contains('deltoid_anterior') || m.contains('deltoid_lateral') ||
-      m.contains('biceps') || m.contains('brachialis') || m.contains('rectus') ||
-      m.contains('obliqu') || m.contains('quad')
-    );
     return Card(
       color: AppTheme.surfaceMid,
       child: Padding(
@@ -74,13 +75,9 @@ class ExerciseDetailScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 240,
-              child: MuscleMapWidget(
-                primaryMuscles: ex.primaryMuscles.toSet(),
-                secondaryMuscles: ex.secondaryMuscles.toSet(),
-                view: frontView ? 'front' : 'back',
-              ),
+            BodyHeatmap(
+              colors: exerciseMuscleColors(ex.primaryMuscles, ex.secondaryMuscles),
+              height: 280,
             ),
             const SizedBox(height: 12),
             Wrap(
