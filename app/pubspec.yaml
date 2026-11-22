@@ -44,6 +44,8 @@ dependencies:
 
   # i18n
   cupertino_icons: ^1.0.8
+  mobile_scanner: 5.2.3
+  nfc_manager: 3.5.0
 
 dev_dependencies:
   flutter_test:

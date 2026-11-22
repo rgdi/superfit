@@ -24,12 +24,14 @@ import '../../domain/engine/program_generator.dart';
 import '../../widgets/muscle_map_widget.dart';
 import '../../widgets/rest_timer.dart';
 import '../../widgets/set_logger_row.dart';
+import '../gym/scan_machine.dart';
 
 const kReadinessPrefix = 'readiness_';
 
 class WorkoutScreen extends ConsumerStatefulWidget {
   final String sessionId;
-  const WorkoutScreen({super.key, required this.sessionId});
+  final String? initialMachineId; // máquina escaneada desde Inicio
+  const WorkoutScreen({super.key, required this.sessionId, this.initialMachineId});
 
   @override
   ConsumerState<WorkoutScreen> createState() => _WorkoutScreenState();
@@ -88,6 +90,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         _loading = false;
       });
       await _ensureRx(0);
+      final initial = _machines.where((m) => m.id == widget.initialMachineId).firstOrNull;
+      if (initial != null && mounted) await _jumpToMachine(initial);
     } catch (e) {
       setState(() {
         _error = '$e';
@@ -153,6 +157,13 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       appBar: AppBar(
         title: Text('${routine.nameEs} · ${_index + 1}/${routine.workout.length}'),
         leading: IconButton(icon: const Icon(Icons.close), onPressed: _confirmExit),
+        actions: [
+          IconButton(
+            tooltip: 'Escanear máquina (QR / NFC)',
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: _scan,
+          ),
+        ],
       ),
       body: ex == null
           ? const Center(child: Text('Ejercicio no encontrado'))
@@ -484,6 +495,67 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
             : 'Muy exigente: siguiente serie a ${_fmt(next)} kg.'),
       ));
     }
+  }
+
+  Future<void> _scan() async {
+    final m = await scanAndResolveMachine(context, ref);
+    if (m == null || !mounted) return;
+    setState(() => _machines = ref.read(gymMachinesProvider));
+    await _jumpToMachine(m);
+  }
+
+  /// Va al ejercicio de la sesión que se hace en esa máquina; si no hay,
+  /// ofrece cambiar el ejercicio actual por uno de esa máquina.
+  Future<void> _jumpToMachine(GymMachine m) async {
+    final types = m.typeIds.toSet();
+    final r = _routine!;
+    int? target;
+    for (int i = 0; i < r.workout.length; i++) {
+      final ex = _catalog[_exIdAt(i)];
+      if (ex == null || !ex.usableWith(types)) continue;
+      final done = List.generate(r.workout[i].sets, (k) => _logged['${ex.id}#${k + 1}'] != null).every((d) => d);
+      target ??= i;
+      if (!done) {
+        target = i;
+        break;
+      }
+    }
+    if (target != null) {
+      _goto(target);
+      _snack('${m.name} → ${_catalog[_exIdAt(target)]!.nameEs}');
+      return;
+    }
+    final current = _catalog[_exIdAt(_index)];
+    final opts = _catalog.values.where((e) => e.usableWith(types)).toList()
+      ..sort((a, b) {
+        final g = current == null ? '' : groupOf(current);
+        return (groupOf(a) == g ? 0 : 1).compareTo(groupOf(b) == g ? 0 : 1);
+      });
+    if (opts.isEmpty) {
+      _snack('No sé qué ejercicio corresponde a ${m.name}. Revisa sus tipos en Mis máquinas.');
+      return;
+    }
+    final pick = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(m.name),
+        content: Text('No está en la sesión de hoy. ¿Cambio "${current?.nameEs ?? 'el ejercicio actual'}" '
+            'por "${opts.first.nameEs}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('No')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Cambiar')),
+        ],
+      ),
+    );
+    if (pick != true) return;
+    setState(() => _swaps[_index] = opts.first.id);
+    await _ensureRx(_index);
+  }
+
+  void _snack(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   Future<void> _swap(Exercise current) async {

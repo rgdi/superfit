@@ -15,6 +15,18 @@ Todas las versiones siguen [SemVer](https://semver.org/lang/es/).
 - 6 tipos de máquina nuevos: adductor, curl de bíceps, extensión de tríceps, crunch,
   glúteo y deltoide posterior (con sus ejercicios).
 
+### Escanear máquinas (QR / NFC)
+- Las Technogym llevan un QR junto al logo NFC con `s.technogym.com/<línea>/<modelo>`
+  (p. ej. `artis/chest_press`). SuperFit lo lee con la cámara y sabe en qué máquina estás.
+- También intenta leer el NFC a la vez: funciona si ese punto es una etiqueta con la URL;
+  si es un lector (llave mywellness), el móvil no puede leerlo y hay que usar el QR.
+- Primer escaneo: propone vincularlo a tu máquina o crearla ya rellenada (nombre y tipo).
+- Durante el entreno: escanear salta al ejercicio de esa máquina con el peso listo para
+  marcar; si no está en la sesión de hoy, propone cambiar el ejercicio actual.
+- Desde Inicio: con sesión activa salta al ejercicio; sin sesión, abre la ficha de la máquina.
+- Las repeticiones y el peso se confirman en la app: las máquinas no los exponen a apps de
+  terceros (van a la nube de Technogym/mywellness, sin API pública).
+
 ### Sistema más inteligente
 - **Perfil de entrenamiento**: días/semana, minutos por sesión, sexo/edad/peso, molestias,
   músculos prioritarios, duración del bloque.

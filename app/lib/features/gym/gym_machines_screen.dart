@@ -10,6 +10,7 @@ import '../../data/models/gym_machine.dart';
 import '../../data/models/machine.dart';
 import '../../data/repositories/gym_repo.dart';
 import '../../domain/engine/machine_matcher.dart';
+import 'scan_machine.dart';
 
 class GymMachinesScreen extends ConsumerWidget {
   const GymMachinesScreen({super.key});
@@ -21,6 +22,14 @@ class GymMachinesScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Mis máquinas'),
         actions: [
+          IconButton(
+            tooltip: 'Escanear QR / NFC de una máquina',
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: () async {
+              final m = await scanAndResolveMachine(context, ref);
+              if (m != null && context.mounted) _openEditor(context, m);
+            },
+          ),
           IconButton(
             tooltip: 'Añadir circuito Technogym',
             icon: const Icon(Icons.playlist_add),
@@ -58,6 +67,7 @@ class GymMachinesScreen extends ConsumerWidget {
                         m.typeIds.map((t) => types[t] ?? t).join(' · '),
                         '${_fmt(m.minWeight)}–${_fmt(m.maxWeight)} kg, saltos de ${_fmt(m.increment)}',
                         if (m.setupNotes.isNotEmpty) '⚙ ${m.setupNotes}',
+                        if (m.codes.isNotEmpty) '🔗 QR/NFC vinculado',
                       ].join('\n'),
                       style: const TextStyle(fontSize: 12),
                     ),
@@ -97,6 +107,12 @@ class GymMachinesScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               FilledButton.icon(
+                onPressed: () => scanAndResolveMachine(context, ref),
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('Escanear el QR de una máquina'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
                 onPressed: () => _bulkAdd(context, ref),
                 icon: const Icon(Icons.playlist_add),
                 label: const Text('Añadir un circuito Technogym'),
@@ -218,7 +234,16 @@ class _BulkAddDialogState extends State<_BulkAddDialog> {
 
 class MachineEditScreen extends ConsumerStatefulWidget {
   final GymMachine? machine;
-  const MachineEditScreen({super.key, this.machine});
+  final String? prefillName;
+  final List<String> prefillTypes;
+  final List<String> prefillCodes;
+  const MachineEditScreen({
+    super.key,
+    this.machine,
+    this.prefillName,
+    this.prefillTypes = const [],
+    this.prefillCodes = const [],
+  });
   @override
   ConsumerState<MachineEditScreen> createState() => _MachineEditScreenState();
 }
@@ -236,13 +261,18 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
   void initState() {
     super.initState();
     final m = widget.machine;
-    _name = TextEditingController(text: m?.name ?? '');
+    _name = TextEditingController(text: m?.name ?? widget.prefillName ?? '');
     _min = TextEditingController(text: _fmt(m?.minWeight ?? 5));
     _max = TextEditingController(text: _fmt(m?.maxWeight ?? 100));
     _inc = TextEditingController(text: _fmt(m?.increment ?? 5));
     _notes = TextEditingController(text: m?.setupNotes ?? '');
-    _types = {...?m?.typeIds};
+    _types = {...?m?.typeIds, ...widget.prefillTypes};
     _typesTouched = m != null;
+    if (m == null && widget.prefillName != null && MachineMatcher.isPlateLoaded(widget.prefillName!)) {
+      _min.text = '0';
+      _max.text = '250';
+      _inc.text = '2.5';
+    }
   }
 
   @override
@@ -394,6 +424,7 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
       maxWeight: max,
       increment: inc,
       setupNotes: _notes.text.trim(),
+      codes: {...?widget.machine?.codes, ...widget.prefillCodes}.toList(),
     );
     await ref.read(gymMachinesProvider.notifier).upsert(m);
     if (mounted) Navigator.pop(context);

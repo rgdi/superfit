@@ -12,6 +12,7 @@ class GymMachine {
   final double maxWeight; // kg (pila completa)
   final double increment; // kg entre placas
   final String setupNotes; // "Asiento 4 · Respaldo 2"
+  final List<String> codes; // QR/NFC vinculados (MachineCode.raw)
 
   const GymMachine({
     required this.id,
@@ -22,6 +23,7 @@ class GymMachine {
     this.maxWeight = 100,
     this.increment = 5,
     this.setupNotes = '',
+    this.codes = const [],
   });
 
   GymMachine copyWith({
@@ -32,6 +34,7 @@ class GymMachine {
     double? maxWeight,
     double? increment,
     String? setupNotes,
+    List<String>? codes,
   }) =>
       GymMachine(
         id: id,
@@ -42,6 +45,7 @@ class GymMachine {
         maxWeight: maxWeight ?? this.maxWeight,
         increment: increment ?? this.increment,
         setupNotes: setupNotes ?? this.setupNotes,
+        codes: codes ?? this.codes,
       );
 
   Map<String, dynamic> toJson() => {
@@ -53,6 +57,7 @@ class GymMachine {
         'max_weight': maxWeight,
         'increment': increment,
         'setup_notes': setupNotes,
+        'codes': codes,
       };
 
   factory GymMachine.fromJson(Map<String, dynamic> j) => GymMachine(
@@ -64,6 +69,7 @@ class GymMachine {
         maxWeight: (j['max_weight'] as num?)?.toDouble() ?? 100,
         increment: (j['increment'] as num?)?.toDouble() ?? 5,
         setupNotes: j['setup_notes'] as String? ?? '',
+        codes: (j['codes'] as List?)?.cast<String>() ?? const [],
       );
 
   static String encodeList(List<GymMachine> l) =>

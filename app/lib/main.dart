@@ -52,6 +52,7 @@ class SuperFitApp extends ConsumerWidget {
           path: '/workout/:sessionId',
           builder: (_, state) => WorkoutScreen(
             sessionId: state.pathParameters['sessionId']!,
+            initialMachineId: state.extra is String ? state.extra as String : null,
           ),
         ),
         GoRoute(path: '/routines', builder: (_, __) => const RoutinesScreen()),

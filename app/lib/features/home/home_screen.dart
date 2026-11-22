@@ -16,6 +16,8 @@ import '../history/history_screen.dart';
 import '../progress/progress_screen.dart';
 import '../settings/settings_screen.dart';
 import 'program_today_card.dart';
+import '../gym/scan_machine.dart';
+import '../gym/gym_machines_screen.dart' show MachineEditScreen;
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -95,7 +97,7 @@ class _HomeTab extends ConsumerWidget {
               const SizedBox(height: 16),
               _volumeChart(ref),
               const SizedBox(height: 16),
-              _quickActions(context),
+              _quickActions(context, ref),
             ],
           ),
         );
@@ -303,14 +305,30 @@ class _HomeTab extends ConsumerWidget {
     );
   }
 
-  Widget _quickActions(BuildContext context) {
+  Widget _quickActions(BuildContext context, WidgetRef ref) {
     return Row(
       children: [
-        Expanded(child: _actionCard(Icons.camera_alt, 'Foto progreso', () => context.push('/progress/photos'))),
+        Expanded(child: _actionCard(Icons.qr_code_scanner, 'Escanear', () => _scanMachine(context, ref))),
+        const SizedBox(width: 12),
+        Expanded(child: _actionCard(Icons.camera_alt, 'Fotos', () => context.push('/progress/photos'))),
         const SizedBox(width: 12),
         Expanded(child: _actionCard(Icons.menu_book, 'Ejercicios', () => context.push('/exercises'))),
       ],
     );
+  }
+
+  /// Escanear una máquina desde Inicio: si hay sesión activa, salta a ese
+  /// ejercicio; si no, abre la ficha de la máquina (ajustes, pesos).
+  Future<void> _scanMachine(BuildContext context, WidgetRef ref) async {
+    final m = await scanAndResolveMachine(context, ref);
+    if (m == null || !context.mounted) return;
+    final active = await ref.read(sessionRepoProvider).activeSession();
+    if (!context.mounted) return;
+    if (active != null) {
+      context.push('/workout/${active.id}', extra: m.id);
+    } else {
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => MachineEditScreen(machine: m)));
+    }
   }
 
   Widget _actionCard(IconData icon, String label, VoidCallback onTap) {
