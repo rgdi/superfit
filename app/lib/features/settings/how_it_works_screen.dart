@@ -83,6 +83,15 @@ const _rules = [
     'Práctica común; evidencia directa limitada',
   ),
   _Rule(
+    'IA local (modelo que aprende de ti)',
+    'Filtro de Kalman sobre tu 1RM estimado por ejercicio y máquina + regresión de tu fatiga entre series, '
+        'tu disposición del día y tu curva reps↔carga. Parte de valores típicos y se aleja de ellos solo cuando '
+        'tus datos lo justifican. Su acierto se mide prediciendo cada sesión antes de verla (pantalla Mi IA). '
+        'Solo puede mover el peso ±10 % respecto a la regla de progresión.',
+    _Level.heuristic,
+    'Métodos estadísticos estándar; la validez depende de tus datos',
+  ),
+  _Rule(
     'Peso inicial',
     'No existe una tabla científica de pesos por máquina (cada fabricante tiene palancas distintas). '
         'Propongo algo conservador y recalibro tras tu primera serie.',

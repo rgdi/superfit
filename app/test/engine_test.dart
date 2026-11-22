@@ -21,7 +21,7 @@ List<SetRecord> _session(String id, DateTime at, double w, List<int> reps, int? 
     ];
 
 void main() {
-  const stack = MachineSpec(minWeight: 5, maxWeight: 100, increment: 5);
+  final stack = MachineSpec(minWeight: 5, maxWeight: 100, increment: 5);
 
   group('LoadEngine', () {
     test('e1RM con RIR: 100 kg × 5 a RPE 8 ≈ 100×(1+7/30)', () {
@@ -35,6 +35,28 @@ void main() {
       expect(LoadEngine.roundTo(43, stack, mode: RoundMode.down), 40);
       expect(LoadEngine.roundTo(140, stack), 100);
       expect(LoadEngine.roundTo(1, stack), 5);
+    });
+
+    test('lista de pesos escrita a mano', () {
+      expect(parseWeightList('5, 10, 15, 22,5'), [5, 10, 15, 22.5]);
+      expect(parseWeightList('5 10 22.5'), [5, 10, 22.5]);
+      expect(parseWeightList('5,10,15'), [5, 10, 15]);
+      expect(parseWeightList('5; 10; 12,5'), [5, 10, 12.5]);
+      expect(parseWeightList('  '), isEmpty);
+    });
+
+    test('pila irregular + microcargas', () {
+      final m = MachineSpec(stack: [5, 10, 15, 22.5, 30], addOns: [2.5]);
+      expect(m.weights, [5, 7.5, 10, 12.5, 15, 17.5, 22.5, 25, 30, 32.5]);
+      expect(m.up(17.5), 22.5);
+      expect(m.down(22.5), 17.5);
+      expect(m.round(20), 17.5); // empate → hacia abajo (más seguro)
+      expect(m.round(21), 22.5);
+      expect(m.round(20, mode: RoundMode.up), 22.5);
+      final p = LoadEngine.nextSession(
+          history: _session('s', DateTime(2026, 1, 1), 15, [12, 12, 12], 8),
+          repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 10, machine: m);
+      expect(p.weight, 17.5); // siguiente peso real, no 15 + "salto"
     });
 
     test('sin historial → calibración con peso conservador redondeado hacia abajo', () {

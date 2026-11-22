@@ -16,8 +16,9 @@ import '../history/history_screen.dart';
 import '../progress/progress_screen.dart';
 import '../settings/settings_screen.dart';
 import 'program_today_card.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../gym/scan_machine.dart';
-import '../gym/gym_machines_screen.dart' show MachineEditScreen;
+import '../gym/machine_history_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -92,13 +93,15 @@ class _HomeTab extends ConsumerWidget {
                 const SizedBox(height: 12),
                 _todayCard(context, ref, snap, locale),
               ],
+              const SizedBox(height: 12),
+              const _AiCard(),
               const SizedBox(height: 16),
               _lastSessionCard(ref),
               const SizedBox(height: 16),
               _volumeChart(ref),
               const SizedBox(height: 16),
               _quickActions(context, ref),
-            ],
+            ].animate(interval: 50.ms).fadeIn(duration: 350.ms).slideY(begin: 0.08, curve: Curves.easeOutCubic),
           ),
         );
       },
@@ -327,7 +330,7 @@ class _HomeTab extends ConsumerWidget {
     if (active != null) {
       context.push('/workout/${active.id}', extra: m.id);
     } else {
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => MachineEditScreen(machine: m)));
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => MachineHistoryScreen(machine: m)));
     }
   }
 
@@ -347,6 +350,36 @@ class _HomeTab extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+/// Resumen de la IA local en Inicio.
+class _AiCard extends ConsumerWidget {
+  const _AiCard();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final m = ref.watch(performanceModelProvider);
+    final ins = m.valueOrNull?.insights;
+    final text = m.isLoading
+        ? 'Entrenando con tus series…'
+        : ins == null || ins.observations == 0
+            ? 'Aprenderá de ti desde tu primera sesión.'
+            : ins.maeModel != null
+                ? '${ins.observations} series aprendidas · acierta tus reps ±${ins.maeModel!.toStringAsFixed(1)}'
+                : '${ins.observations} series aprendidas · afinando…';
+    return Card(
+      color: AppTheme.surfaceMid,
+      child: ListTile(
+        leading: const Text('🤖', style: TextStyle(fontSize: 28))
+            .animate(onPlay: (c) => c.repeat(reverse: true))
+            .scaleXY(begin: 0.95, end: 1.05, duration: 1400.ms, curve: Curves.easeInOut),
+        title: const Text('Mi IA', style: TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text(text, style: const TextStyle(fontSize: 12)),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push('/ai'),
       ),
     );
   }

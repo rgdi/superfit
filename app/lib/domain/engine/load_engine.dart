@@ -12,6 +12,8 @@
 // - Calibración: sin historial, propone un peso conservador y reajusta las
 //   siguientes series a partir de la primera (RPE declarado).
 import 'dart:math' as math;
+import 'machine_spec.dart';
+export 'machine_spec.dart';
 
 class SetRecord {
   final String sessionId;
@@ -28,13 +30,6 @@ class SetRecord {
   });
 }
 
-class MachineSpec {
-  final double minWeight;
-  final double maxWeight;
-  final double increment;
-  const MachineSpec({this.minWeight = 0, this.maxWeight = 500, this.increment = 2.5});
-  static const generic = MachineSpec();
-}
 
 enum LoadAction { calibrate, increase, addReps, hold, decrease, maxedOut }
 
@@ -81,18 +76,7 @@ class LoadEngine {
   }
 
   /// Redondea a un peso que exista en la máquina.
-  static double roundTo(double w, MachineSpec m, {RoundMode mode = RoundMode.nearest}) {
-    final inc = m.increment <= 0 ? 2.5 : m.increment;
-    final steps = (w - m.minWeight) / inc;
-    final k = switch (mode) {
-      RoundMode.down => steps.floorToDouble(),
-      RoundMode.up => steps.ceilToDouble(),
-      RoundMode.nearest => steps.roundToDouble(),
-    };
-    final v = m.minWeight + k * inc;
-    final clamped = v.clamp(m.minWeight, m.maxWeight).toDouble();
-    return double.parse(clamped.toStringAsFixed(2));
-  }
+  static double roundTo(double w, MachineSpec m, {RoundMode mode = RoundMode.nearest}) => m.round(w, mode: mode);
 
   /// Prescripción para la próxima sesión de un ejercicio.
   static LoadPrescription nextSession({
@@ -101,8 +85,9 @@ class LoadEngine {
     required int repMax,
     required int rpeTarget,
     required double coldStartWeight,
-    MachineSpec machine = MachineSpec.generic,
+    MachineSpec? machine,
   }) {
+    machine ??= MachineSpec.generic;
     if (history.isEmpty) {
       final w = roundTo(coldStartWeight, machine, mode: RoundMode.down);
       return LoadPrescription(
@@ -152,7 +137,7 @@ class LoadEngine {
 
     // 1) Todas las series al tope del rango sin pasarse de RPE → subir carga
     if (minReps >= repMax && rpeOk) {
-      var next = roundTo(lastWeight + machine.increment, machine, mode: RoundMode.up);
+      var next = machine.up(lastWeight);
       // Si el e1RM dice que vas sobrado, salta más (máx +10%)
       final byE1rm = roundTo(loadFor(lastE1rm, repMin, rpeTarget), machine, mode: RoundMode.down);
       final cap = roundTo(lastWeight * 1.10, machine, mode: RoundMode.down);
@@ -169,7 +154,7 @@ class LoadEngine {
     if (tooHard) {
       final mid = ((repMin + repMax) / 2).round();
       var next = roundTo(loadFor(lastE1rm, mid, rpeTarget), machine, mode: RoundMode.down);
-      if (next >= lastWeight) next = roundTo(lastWeight - machine.increment, machine, mode: RoundMode.down);
+      if (next >= lastWeight) next = machine.down(lastWeight);
       final why = minReps < repMin
           ? 'No llegaste a $repMin reps → baja a ${_fmt(next)} kg para trabajar en rango.'
           : 'RPE medio ${avgRpe!.toStringAsFixed(1)} (objetivo $rpeTarget) → baja a ${_fmt(next)} kg.';
@@ -191,11 +176,12 @@ class LoadEngine {
     required int repMin,
     required int repMax,
     required int rpeTarget,
-    MachineSpec machine = MachineSpec.generic,
+    MachineSpec? machine,
     bool calibrating = false,
   }) {
+    machine ??= MachineSpec.generic;
     if (rpe == null) {
-      if (reps < repMin) return roundTo(weight - machine.increment, machine, mode: RoundMode.down);
+      if (reps < repMin) return machine.down(weight);
       return null;
     }
     final diff = rpe - rpeTarget;
@@ -207,7 +193,7 @@ class LoadEngine {
     final target = reps.clamp(repMin, repMax);
     final est = e1rm(weight, reps, rpe);
     final next = roundTo(loadFor(est, target, rpeTarget), machine);
-    if ((next - weight).abs() < machine.increment * 0.5) return null;
+    if ((next - weight).abs() < 1e-6) return null;
     return next;
   }
 
@@ -249,4 +235,3 @@ class LoadEngine {
   static String _fmt(double w) => w == w.roundToDouble() ? w.toStringAsFixed(0) : w.toStringAsFixed(1);
 }
 
-enum RoundMode { nearest, down, up }

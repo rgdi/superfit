@@ -2,6 +2,39 @@
 
 Todas las versiones siguen [SemVer](https://semver.org/lang/es/).
 
+## [1.2.0] - 22 nov 2026
+
+### 🤖 IA local que aprende de ti (100 % en el móvil)
+- Modelo de rendimiento propio, entrenado en el dispositivo con tus series cada vez que
+  abres un entreno (milisegundos, sin internet, nada sale del móvil):
+  - **Filtro de Kalman** por ejercicio *y máquina*: sigue tu fuerza y su incertidumbre.
+  - Aprende tu **fatiga entre series**, el efecto de **"¿cómo llegas hoy?"** y de
+    **repetir ejercicio con poco descanso** (regresión con valores típicos de partida).
+  - Aprende tu **curva reps↔carga** personal, elegida por error de predicción fuera de muestra.
+- Usa el modelo para afinar el peso (±10 % sobre la regla de progresión), predecir tus
+  reps en cada serie y reajustar las series pendientes en vivo.
+- **Se evalúa a sí mismo** (backtest): pantalla *Mi IA* con su error real frente a la
+  fórmula genérica. En datos simulados: ±0,45 reps frente a ±1,17.
+
+### Pesos
+- **Pila de pesos real**: lista exacta de placas (aunque no suban igual) + microcargas
+  (+1, +1,25, +2, +2,5, +5 kg). La app solo propone pesos que existen; selector visual.
+- **Historial por máquina física**: cada serie guarda en qué máquina se hizo; dos
+  máquinas del mismo ejercicio no se mezclan (cada una pesa distinto).
+- **Peso por ejercicio** en máquinas multiuso (polea, Multi Hip…), con su propio historial.
+- **Series con pesos distintos**: aproximación (50 % / 75 %), top set + back-off (−10 %),
+  drop sets y series extra. Las aproximaciones no cuentan para progresión ni volumen.
+- Ficha de cada máquina con gráficas del 1RM estimado, peso máximo y estimación de la IA.
+
+### Animaciones
+- Transiciones entre ejercicios, series que "rebotan" y brillan al completarse, números
+  animados, barra de progreso de la sesión, confeti y aviso al batir un récord, entrada
+  escalonada en Inicio, gráficas animadas y resumen final animado.
+
+### Otros
+- Migración de base de datos v2 (columna `machine_id`), automática.
+- Test de flujo completo de la pantalla de entrenamiento.
+
 ## [1.1.0] - 22 nov 2026
 
 ### Mi gimnasio (Ajustes)

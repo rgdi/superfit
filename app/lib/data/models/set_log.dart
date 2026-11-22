@@ -11,7 +11,8 @@ class SetLog {
   final String? tempoNotes;
   final bool completed;
   final DateTime performedAt;
-  final String? technique; // rest_pause | drop_set | myo_reps | null
+  final String? technique; // tipo de serie: warmup | work | backoff | drop (null = work)
+  final String? machineId; // máquina física (GymMachine.id)
 
   const SetLog({
     required this.id,
@@ -26,6 +27,7 @@ class SetLog {
     required this.completed,
     required this.performedAt,
     this.technique,
+    this.machineId,
   });
 
   factory SetLog.fromMap(Map<String, dynamic> m) => SetLog(
@@ -41,6 +43,7 @@ class SetLog {
     completed: (m['completed'] as int) == 1,
     performedAt: DateTime.fromMillisecondsSinceEpoch(m['performed_at'] as int),
     technique: m['technique'] as String?,
+    machineId: m['machine_id'] as String?,
   );
 
   Map<String, dynamic> toMap() => {
@@ -56,7 +59,11 @@ class SetLog {
     'completed': completed ? 1 : 0,
     'performed_at': performedAt.millisecondsSinceEpoch,
     'technique': technique,
+    'machine_id': machineId,
   };
+
+  /// Serie de calentamiento/aproximación: no cuenta para progresión ni volumen.
+  bool get isWarmup => technique == 'warmup';
 
   double get volume => weight * reps;
   bool get isEffective {

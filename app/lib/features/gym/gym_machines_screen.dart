@@ -11,6 +11,8 @@ import '../../data/models/machine.dart';
 import '../../data/repositories/gym_repo.dart';
 import '../../domain/engine/machine_matcher.dart';
 import 'scan_machine.dart';
+import 'machine_history_screen.dart';
+import '../../domain/engine/machine_spec.dart';
 
 class GymMachinesScreen extends ConsumerWidget {
   const GymMachinesScreen({super.key});
@@ -59,7 +61,8 @@ class GymMachinesScreen extends ConsumerWidget {
                 Card(
                   color: AppTheme.surfaceMid,
                   child: ListTile(
-                    onTap: () => _openEditor(context, m),
+                    onTap: () => Navigator.of(context)
+                        .push(MaterialPageRoute(builder: (_) => MachineHistoryScreen(machine: m))),
                     leading: const Icon(Icons.fitness_center, color: AppTheme.primary),
                     title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w600)),
                     subtitle: Text(
@@ -72,9 +75,14 @@ class GymMachinesScreen extends ConsumerWidget {
                       style: const TextStyle(fontSize: 12),
                     ),
                     isThreeLine: true,
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => ref.read(gymMachinesProvider.notifier).remove(m.id),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (v) => v == 'edit'
+                          ? _openEditor(context, m)
+                          : ref.read(gymMachinesProvider.notifier).remove(m.id),
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(value: 'edit', child: Text('Editar')),
+                        PopupMenuItem(value: 'delete', child: Text('Eliminar')),
+                      ],
                     ),
                   ),
                 ),
@@ -254,6 +262,8 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
   late final TextEditingController _max;
   late final TextEditingController _inc;
   late final TextEditingController _notes;
+  late final TextEditingController _stack;
+  late Set<double> _addOns;
   late Set<String> _types;
   bool _typesTouched = false;
 
@@ -266,6 +276,8 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
     _max = TextEditingController(text: _fmt(m?.maxWeight ?? 100));
     _inc = TextEditingController(text: _fmt(m?.increment ?? 5));
     _notes = TextEditingController(text: m?.setupNotes ?? '');
+    _stack = TextEditingController(text: (m?.stack ?? const []).map(_fmt).join(', '));
+    _addOns = {...?m?.addOns};
     _types = {...?m?.typeIds, ...widget.prefillTypes};
     _typesTouched = m != null;
     if (m == null && widget.prefillName != null && MachineMatcher.isPlateLoaded(widget.prefillName!)) {
@@ -277,7 +289,7 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
 
   @override
   void dispose() {
-    for (final c in [_name, _min, _max, _inc, _notes]) {
+    for (final c in [_name, _min, _max, _inc, _notes, _stack]) {
       c.dispose();
     }
     super.dispose();
@@ -369,8 +381,7 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
               const Text('Pila de pesos', style: TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
               const Text(
-                'Mira la máquina: peso de la primera placa, el total y cuánto sube cada placa. '
-                'Si tiene microcarga (p. ej. +2,5 kg), pon ese salto.',
+                'Mira la máquina: peso de la primera placa, el total y cuánto sube cada placa.',
                 style: TextStyle(color: Colors.white60, fontSize: 12),
               ),
               const SizedBox(height: 8),
@@ -383,6 +394,31 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
                   Expanded(child: TextField(controller: _inc, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: const InputDecoration(labelText: 'Salto (kg)'))),
                 ],
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _stack,
+                keyboardType: TextInputType.text,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(
+                  labelText: 'Pesos exactos de la pila (opcional)',
+                  hintText: '5, 10, 15, 22.5, 30, 37.5…',
+                  helperText: 'Si las placas no suben siempre igual, escríbelas aquí (sustituye mín/máx/salto).',
+                  helperMaxLines: 2,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text('Microcargas (se suman a cualquier placa)', style: TextStyle(fontSize: 13)),
+              const SizedBox(height: 6),
+              Wrap(spacing: 6, children: [
+                for (final a in const [1.0, 1.25, 2.0, 2.5, 5.0])
+                  FilterChip(
+                    label: Text('+${_fmt(a)} kg'),
+                    selected: _addOns.contains(a),
+                    onSelected: (v) => setState(() => v ? _addOns.add(a) : _addOns.remove(a)),
+                  ),
+              ]),
+              const SizedBox(height: 8),
+              _weightsPreview(),
               const SizedBox(height: 20),
               TextField(
                 controller: _notes,
@@ -401,6 +437,40 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
           );
         },
       ),
+    );
+  }
+
+  List<double> _parseStack() => parseWeightList(_stack.text);
+
+  MachineSpec _previewSpec() {
+    final st = _parseStack();
+    return MachineSpec(
+      minWeight: _num(_min, 0),
+      maxWeight: _num(_max, 100),
+      increment: _num(_inc, 2.5).clamp(0.25, 50).toDouble(),
+      stack: st.isEmpty ? null : st,
+      addOns: _addOns.toList(),
+    );
+  }
+
+  Widget _weightsPreview() {
+    final ws = _previewSpec().weights;
+    final shown = ws.length > 24 ? [...ws.take(12), null, ...ws.skip(ws.length - 6)] : ws;
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: AppTheme.surfaceMid, borderRadius: BorderRadius.circular(12)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('${ws.length} pesos posibles', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+        const SizedBox(height: 6),
+        Wrap(spacing: 4, runSpacing: 4, children: [
+          for (final w in shown)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(color: AppTheme.surfaceLight, borderRadius: BorderRadius.circular(6)),
+              child: Text(w == null ? '…' : _fmt(w), style: const TextStyle(fontSize: 11)),
+            ),
+        ]),
+      ]),
     );
   }
 
@@ -424,6 +494,8 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
       maxWeight: max,
       increment: inc,
       setupNotes: _notes.text.trim(),
+      stack: _parseStack(),
+      addOns: _addOns.toList()..sort(),
       codes: {...?widget.machine?.codes, ...widget.prefillCodes}.toList(),
     );
     await ref.read(gymMachinesProvider.notifier).upsert(m);

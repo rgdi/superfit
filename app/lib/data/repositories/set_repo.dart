@@ -20,6 +20,7 @@ class SetRepo {
     String? technique,
     String? tempoNotes,
     bool completed = true,
+    String? machineId,
   }) async {
     final db = await _db;
     final setLog = SetLog(
@@ -35,6 +36,7 @@ class SetRepo {
       tempoNotes: tempoNotes,
       completed: completed,
       performedAt: DateTime.now(),
+      machineId: machineId,
     );
     await db.insert('set_logs', setLog.toMap());
     return setLog;
@@ -136,5 +138,20 @@ class SetRepo {
       if (epley > best) best = epley;
     }
     return best;
+  }
+
+  /// Todas las series completadas (para entrenar el modelo), en orden cronológico.
+  Future<List<SetLog>> allCompleted() async {
+    final db = await _db;
+    final rows = await db.query('set_logs', where: 'completed = 1', orderBy: 'performed_at ASC');
+    return rows.map(SetLog.fromMap).toList();
+  }
+
+  /// Series hechas en una máquina física concreta.
+  Future<List<SetLog>> setsForMachine(String machineId) async {
+    final db = await _db;
+    final rows = await db.query('set_logs',
+        where: 'machine_id = ? AND completed = 1', whereArgs: [machineId], orderBy: 'performed_at ASC');
+    return rows.map(SetLog.fromMap).toList();
   }
 }

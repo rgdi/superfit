@@ -9,7 +9,7 @@ import '../../data/models/generated_program.dart';
 import '../../data/models/routine.dart';
 import '../../domain/engine/load_engine.dart';
 import '../../domain/engine/program_coach.dart';
-import '../workout/workout_screen.dart' show kReadinessPrefix;
+import '../../domain/ai/ai_service.dart' show kReadinessPrefix;
 
 class ProgramTodayCard extends ConsumerWidget {
   final GeneratedProgram program;

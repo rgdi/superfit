@@ -7,6 +7,8 @@ void main() {
     await tester.pumpWidget(
       const ProviderScope(child: SuperFitApp()),
     );
-    // No assertion: we only verify it doesn't crash on first frame.
+    // Deja terminar las animaciones de entrada (usan temporizadores con retardo).
+    await tester.pump(const Duration(seconds: 3));
+    // No assertion: we only verify it doesn't crash.
   });
 }

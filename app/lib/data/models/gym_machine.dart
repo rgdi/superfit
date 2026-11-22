@@ -2,6 +2,7 @@
 // Se mapea a uno o varios "tipos" del catálogo (chest_press, leg_curl...)
 // para saber qué ejercicios se pueden hacer con ella.
 import 'dart:convert';
+import '../../domain/engine/machine_spec.dart';
 
 class GymMachine {
   final String id;
@@ -13,6 +14,8 @@ class GymMachine {
   final double increment; // kg entre placas
   final String setupNotes; // "Asiento 4 · Respaldo 2"
   final List<String> codes; // QR/NFC vinculados (MachineCode.raw)
+  final List<double> stack; // pesos exactos de la pila (vacío = mín/máx/salto)
+  final List<double> addOns; // microcargas: +1.25, +2.5...
 
   const GymMachine({
     required this.id,
@@ -24,7 +27,17 @@ class GymMachine {
     this.increment = 5,
     this.setupNotes = '',
     this.codes = const [],
+    this.stack = const [],
+    this.addOns = const [],
   });
+
+  MachineSpec get spec => MachineSpec(
+        minWeight: minWeight,
+        maxWeight: maxWeight,
+        increment: increment,
+        stack: stack.isEmpty ? null : stack,
+        addOns: addOns,
+      );
 
   GymMachine copyWith({
     String? name,
@@ -35,6 +48,8 @@ class GymMachine {
     double? increment,
     String? setupNotes,
     List<String>? codes,
+    List<double>? stack,
+    List<double>? addOns,
   }) =>
       GymMachine(
         id: id,
@@ -46,6 +61,8 @@ class GymMachine {
         increment: increment ?? this.increment,
         setupNotes: setupNotes ?? this.setupNotes,
         codes: codes ?? this.codes,
+        stack: stack ?? this.stack,
+        addOns: addOns ?? this.addOns,
       );
 
   Map<String, dynamic> toJson() => {
@@ -58,6 +75,8 @@ class GymMachine {
         'increment': increment,
         'setup_notes': setupNotes,
         'codes': codes,
+        'stack': stack,
+        'add_ons': addOns,
       };
 
   factory GymMachine.fromJson(Map<String, dynamic> j) => GymMachine(
@@ -70,6 +89,8 @@ class GymMachine {
         increment: (j['increment'] as num?)?.toDouble() ?? 5,
         setupNotes: j['setup_notes'] as String? ?? '',
         codes: (j['codes'] as List?)?.cast<String>() ?? const [],
+        stack: (j['stack'] as List?)?.map((e) => (e as num).toDouble()).toList() ?? const [],
+        addOns: (j['add_ons'] as List?)?.map((e) => (e as num).toDouble()).toList() ?? const [],
       );
 
   static String encodeList(List<GymMachine> l) =>

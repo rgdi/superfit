@@ -41,7 +41,8 @@ class DBHelper {
         tempo_notes TEXT,
         completed INTEGER NOT NULL,
         performed_at INTEGER NOT NULL,
-        technique TEXT
+        technique TEXT,
+        machine_id TEXT
       )
     ''');
     batch.execute('CREATE INDEX idx_setlogs_session ON set_logs(session_id)');
@@ -109,7 +110,10 @@ class DBHelper {
   }
 
   static Future<void> _onUpgrade(Database db, int oldV, int newV) async {
-    // Placeholder para migraciones futuras
+    if (oldV < 2) {
+      // v2: máquina física en la que se hizo cada serie
+      await db.execute('ALTER TABLE set_logs ADD COLUMN machine_id TEXT');
+    }
   }
 
   static Future<void> close() async {

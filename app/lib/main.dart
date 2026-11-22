@@ -24,6 +24,7 @@ import 'features/gym/gym_machines_screen.dart';
 import 'features/gym/training_profile_screen.dart';
 import 'features/gym/program_screen.dart';
 import 'features/settings/how_it_works_screen.dart';
+import 'features/ai/ai_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: SuperFitApp()));
@@ -95,6 +96,7 @@ class SuperFitApp extends ConsumerWidget {
         GoRoute(path: '/settings/profile', builder: (_, __) => const TrainingProfileScreen()),
         GoRoute(path: '/settings/how', builder: (_, __) => const HowItWorksScreen()),
         GoRoute(path: '/program', builder: (_, __) => const ProgramScreen()),
+        GoRoute(path: '/ai', builder: (_, __) => const AiScreen()),
       ],
     );
 

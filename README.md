@@ -15,6 +15,8 @@
 
 - 🧠 **Adaptativa** — aprende de tu RPE, adherencia y PRs; ajusta pesos, descansos y ejercicios
 - 🏋️ **Tus máquinas** — registra tus Technogym (u otras) desde Ajustes: nombre, pila de pesos y ajuste de asiento
+- 🤖 **IA local que aprende de ti** — modelo entrenado en tu móvil con tus series: afina pesos, predice tus reps y mide su propio acierto
+- ⚖️ **Pesos reales** — pila exacta + microcargas, historial por máquina, aproximación / top set + back-off / drop sets
 - 📷 **Escanea la máquina** — el QR (o NFC) que llevan las Technogym te lleva directo a ese ejercicio con el peso listo
 - 🔬 **Honesta con la evidencia** — cada regla indica si tiene evidencia sólida, parcial o es criterio práctico
 - 📊 **Upper/Lower 4×/semana** — frecuencia 2×/grupo, 38 min por sesión

@@ -12,6 +12,8 @@ import '../data/models/training_profile.dart';
 import '../data/models/generated_program.dart';
 import '../data/models/exercise.dart';
 import '../data/repositories/gym_repo.dart';
+import '../domain/ai/ai_service.dart';
+import '../domain/ai/performance_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'db/db_helper.dart';
 import '../domain/usecases/progression_service.dart';
@@ -160,3 +162,10 @@ class ProgramNotifier extends StateNotifier<GeneratedProgram?> {
     await _repo.saveProgram(p);
   }
 }
+
+/// IA local: se entrena con todo tu historial al pedirla. Invalídala al
+/// terminar una sesión para que reaprenda (ref.invalidate(performanceModelProvider)).
+final performanceModelProvider = FutureProvider<PerformanceModel>((ref) async {
+  final exercises = await ref.read(catalogRepoProvider).exercises();
+  return AiService.train(ref.read(setRepoProvider), exercises);
+});
