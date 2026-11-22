@@ -13,7 +13,13 @@ class ProgressScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Progreso')),
+      appBar: AppBar(title: const Text('Progreso'), actions: [
+        IconButton(
+          tooltip: 'Mapa muscular',
+          icon: const Icon(Icons.accessibility_new),
+          onPressed: () => context.push('/muscles'),
+        ),
+      ]),
       body: FutureBuilder<List<BodyMetric>>(
         future: ref.read(bodyMetricRepoProvider).all(),
         builder: (context, snap) {

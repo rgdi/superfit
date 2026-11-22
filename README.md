@@ -17,6 +17,8 @@
 - 🏋️ **Tus máquinas** — registra tus Technogym (u otras) desde Ajustes: nombre, pila de pesos y ajuste de asiento
 - 🤖 **IA local que aprende de ti** — modelo entrenado en tu móvil con tus series: afina pesos, predice tus reps y mide su propio acierto
 - ⚖️ **Pesos reales** — pila exacta + microcargas, historial por máquina, aproximación / top set + back-off / drop sets
+- 🗺️ **Mapa muscular** — volumen semanal y recuperación por músculo en un mapa corporal interactivo
+- ⚡ **Máquinas más eficientes** — el mínimo de máquinas que trabaja todos tus músculos (Esencial / Completo)
 - 📷 **Escanea la máquina** — el QR (o NFC) que llevan las Technogym te lleva directo a ese ejercicio con el peso listo
 - 🔬 **Honesta con la evidencia** — cada regla indica si tiene evidencia sólida, parcial o es criterio práctico
 - 📊 **Upper/Lower 4×/semana** — frecuencia 2×/grupo, 38 min por sesión

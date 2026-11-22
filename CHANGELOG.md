@@ -2,6 +2,30 @@
 
 Todas las versiones siguen [SemVer](https://semver.org/lang/es/).
 
+## [1.3.0] - 22 nov 2026
+
+### Mapa muscular
+- Mapa corporal interactivo (frontal y posterior, los 23 músculos) con dos modos:
+  **volumen semanal** (series/objetivo, mapa de calor) y **recuperación estimada**.
+- Series fraccionales: músculo principal = 1, secundario = 0,5 (Pelland 2026).
+- Toca un músculo: series de la semana vs objetivo, recuperación, qué ejercicios lo han
+  trabajado y el mejor ejercicio para él con tus máquinas.
+- Lista de lo que más necesita trabajo.
+
+### Máquinas más eficientes
+- Optimizador de cobertura: el menor conjunto de ejercicios, con TUS máquinas y evitando
+  tus molestias, que trabaja todos los músculos. Dos niveles: **Esencial** (6 máquinas,
+  ~37 min con todas disponibles) y **Completo**.
+- Prioriza multiarticulares y músculos grandes, penaliza lo que carga la columna y premia
+  variantes con el músculo estirado (Maeo 2021/2023, Pedrosa 2022, Kassiano 2023).
+- No optimiza "activación EMG", que no predice hipertrofia (Vigotsky 2017).
+- Indica qué queda sin trabajar y qué máquina añadir. Botón "Usar como mi programa".
+
+### Correcciones
+- Carrera al guardar máquinas/perfil/programa: si escribías antes de que terminase la
+  carga inicial, la carga lo sobrescribía con el valor antiguo.
+- Textos que se desbordaban en pantallas estrechas o con letra grande.
+
 ## [1.2.0] - 22 nov 2026
 
 ### 🤖 IA local que aprende de ti (100 % en el móvil)

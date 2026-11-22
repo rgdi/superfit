@@ -120,7 +120,7 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           const _SectionHeader('Acerca de'),
           const ListTile(
-            title: Text('SuperFit v1.2.0'),
+            title: Text('SuperFit v1.3.0'),
             subtitle: Text('100% offline · sin tracking'),
           ),
           ListTile(

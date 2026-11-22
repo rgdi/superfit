@@ -14,6 +14,8 @@ import 'package:superfit/domain/ai/ai_service.dart';
 import 'package:superfit/domain/ai/performance_model.dart';
 import 'package:superfit/features/ai/ai_screen.dart';
 import 'package:superfit/features/gym/machine_history_screen.dart';
+import 'package:superfit/features/muscles/muscle_map_screen.dart';
+import 'package:superfit/widgets/body_heatmap.dart';
 import 'package:superfit/features/workout/workout_screen.dart';
 import 'package:superfit/widgets/set_row.dart';
 
@@ -107,6 +109,7 @@ void main() {
     await CatalogRepo().exercises();
     await CatalogRepo().routines();
     await CatalogRepo().machines();
+    await CatalogRepo().muscles();
   });
 
   setUp(() {
@@ -238,5 +241,43 @@ void main() {
     final m = await c.read(performanceModelProvider.future);
     expect(m.knows('chest_press_machine', 'm1'), isTrue);
     expect(m, isA<PerformanceModel>());
+  });
+
+  testWidgets('mapa muscular: volumen, recuperación, toque y máquinas eficientes', (t) async {
+    // Historial reciente para que haya calor en el mapa
+    setRepo.sets.addAll([
+      for (int i = 0; i < 4; i++)
+        SetLog(id: 'r$i', sessionId: 'recent', exerciseId: 'leg_press', setNumber: i + 1, weight: 100, reps: 10,
+            rpe: 8, completed: true, performedAt: DateTime.now().subtract(Duration(hours: 5, minutes: i))),
+    ]);
+    await pump(t, const MuscleMapScreen());
+    expect(find.byType(BodyHeatmap), findsOneWidget);
+    expect(find.text('Lo que más necesita trabajo (7 días)'), findsOneWidget);
+    // Tocar el centro del pecho en la vista frontal
+    final box = t.getRect(find.byType(BodyHeatmap));
+    final frontCanvasW = box.height - 18; // lienzo 1:2 en la mitad izquierda
+    await t.tapAt(Offset(box.left + box.width / 4 - (frontCanvasW / 2) * 0.07, box.top + (box.height - 18) * 0.232));
+    await settle(t);
+    expect(find.textContaining('Series esta semana'), findsOneWidget);
+    // Modo recuperación
+    await t.tap(find.text('🔋 Recuperación'));
+    await settle(t);
+    expect(find.text('Listo'), findsOneWidget);
+    // Pestaña de máquinas eficientes
+    await t.tap(find.text('Máquinas eficientes'));
+    await settle(t);
+    expect(find.text('Press de pecho en máquina'), findsWidgets);
+    await t.tap(find.text('Completo'));
+    await settle(t);
+    await t.dragUntilVisible(find.text('Usar como mi programa'), find.byType(ListView).last, const Offset(0, -300));
+    await t.pump(const Duration(milliseconds: 500));
+    await t.tap(find.text('Usar como mi programa'));
+    await settle(t);
+    await t.tap(find.text('Usar'));
+    await settle(t);
+    final program = c.read(programProvider);
+    expect(program, isNotNull);
+    expect(program!.routines.single.nameEs, 'Circuito completo');
+    expect(program.routines.single.workout.every((w) => w.sets == 2), isTrue);
   });
 }

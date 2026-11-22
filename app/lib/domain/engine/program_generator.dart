@@ -55,6 +55,11 @@ const Map<String, List<String>> _injuryContra = {
   'achilles': ['achilles'],
 };
 
+/// ¿Excluir este ejercicio por las molestias del usuario? (las contraindicaciones
+/// marcadas solo para casos "_severe" se permiten con precaución)
+bool contraindicatedFor(Exercise e, Set<String> injuries) => e.contraindications.any((c) =>
+    !c.endsWith('_severe') && injuries.any((inj) => (_injuryContra[inj] ?? [inj]).any(c.startsWith)));
+
 class _Slot {
   final String group;
   final String? focus; // press | side | rear | upper | null

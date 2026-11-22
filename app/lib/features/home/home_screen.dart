@@ -313,6 +313,8 @@ class _HomeTab extends ConsumerWidget {
       children: [
         Expanded(child: _actionCard(Icons.qr_code_scanner, 'Escanear', () => _scanMachine(context, ref))),
         const SizedBox(width: 12),
+        Expanded(child: _actionCard(Icons.accessibility_new, 'Músculos', () => context.push('/muscles'))),
+        const SizedBox(width: 12),
         Expanded(child: _actionCard(Icons.camera_alt, 'Fotos', () => context.push('/progress/photos'))),
         const SizedBox(width: 12),
         Expanded(child: _actionCard(Icons.menu_book, 'Ejercicios', () => context.push('/exercises'))),
@@ -346,7 +348,7 @@ class _HomeTab extends ConsumerWidget {
             children: [
               Icon(icon, color: AppTheme.primary, size: 28),
               const SizedBox(height: 8),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+              FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
             ],
           ),
         ),

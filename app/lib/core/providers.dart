@@ -87,24 +87,28 @@ final gymMachinesProvider = StateNotifierProvider<GymMachinesNotifier, List<GymM
 
 class GymMachinesNotifier extends StateNotifier<List<GymMachine>> {
   final GymRepo _repo;
+  bool _written = false; // si el usuario escribe antes de que acabe la carga, no pisarlo
   GymMachinesNotifier(this._repo) : super(const []) {
     _repo.machines().then((m) {
-      if (mounted) state = m;
+      if (mounted && !_written) state = m;
     });
   }
 
   Future<void> upsert(GymMachine m) async {
+    _written = true;
     final i = state.indexWhere((x) => x.id == m.id);
     state = i < 0 ? [...state, m] : [...state.sublist(0, i), m, ...state.sublist(i + 1)];
     await _repo.saveMachines(state);
   }
 
   Future<void> addAll(List<GymMachine> ms) async {
+    _written = true;
     state = [...state, ...ms];
     await _repo.saveMachines(state);
   }
 
   Future<void> remove(String id) async {
+    _written = true;
     state = state.where((m) => m.id != id).toList();
     await _repo.saveMachines(state);
   }
@@ -133,13 +137,15 @@ final trainingProfileProvider = StateNotifierProvider<TrainingProfileNotifier, T
 
 class TrainingProfileNotifier extends StateNotifier<TrainingProfile> {
   final GymRepo _repo;
+  bool _written = false;
   TrainingProfileNotifier(this._repo) : super(const TrainingProfile()) {
     _repo.profile().then((p) {
-      if (mounted) state = p;
+      if (mounted && !_written) state = p;
     });
   }
 
   Future<void> update(TrainingProfile p) async {
+    _written = true;
     state = p;
     await _repo.saveProfile(p);
   }
@@ -151,13 +157,15 @@ final programProvider = StateNotifierProvider<ProgramNotifier, GeneratedProgram?
 
 class ProgramNotifier extends StateNotifier<GeneratedProgram?> {
   final GymRepo _repo;
+  bool _written = false;
   ProgramNotifier(this._repo) : super(null) {
     _repo.program().then((p) {
-      if (mounted) state = p;
+      if (mounted && !_written) state = p;
     });
   }
 
   Future<void> set(GeneratedProgram? p) async {
+    _written = true;
     state = p;
     await _repo.saveProgram(p);
   }

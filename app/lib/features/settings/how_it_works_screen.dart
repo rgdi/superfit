@@ -83,6 +83,35 @@ const _rules = [
     'Práctica común; evidencia directa limitada',
   ),
   _Rule(
+    'Series indirectas cuentan la mitad',
+    'En el mapa muscular, el músculo principal de un ejercicio suma 1 serie y los secundarios 0,5. '
+        'Ese recuento fraccional predice la hipertrofia mejor que contar solo las series directas.',
+    _Level.partial,
+    'Pelland 2026 · PMID 41343037',
+  ),
+  _Rule(
+    'Entrenar el músculo estirado',
+    'Algunas variantes que trabajan el músculo en posición alargada dan más crecimiento: curl femoral sentado '
+        '(vs tumbado), extensión de tríceps por encima de la cabeza, cuádriceps y gemelo con énfasis en el estiramiento. '
+        'El recomendador de máquinas eficientes lo tiene en cuenta.',
+    _Level.partial,
+    'Maeo 2021 · PMID 33009197 · Maeo 2023 · PMID 35819335 · Pedrosa 2022 · PMID 33977835 · Kassiano 2023 · PMID 37015016',
+  ),
+  _Rule(
+    '"Máxima activación" no es el objetivo',
+    'La activación medida con electromiografía no predice bien cuánto crece un músculo. Por eso las máquinas '
+        'eficientes se eligen por cobertura muscular por esfuerzo, no por EMG.',
+    _Level.solid,
+    'Vigotsky 2017 · PMID 29354060',
+  ),
+  _Rule(
+    'Recuperación por músculo',
+    'Estimación a partir de las series recientes, su esfuerzo y el tiempo pasado. Orientativa: no mide daño '
+        'muscular ni tu estado real.',
+    _Level.heuristic,
+    'Criterio propio',
+  ),
+  _Rule(
     'IA local (modelo que aprende de ti)',
     'Filtro de Kalman sobre tu 1RM estimado por ejercicio y máquina + regresión de tu fatiga entre series, '
         'tu disposición del día y tu curva reps↔carga. Parte de valores típicos y se aleja de ellos solo cuando '
