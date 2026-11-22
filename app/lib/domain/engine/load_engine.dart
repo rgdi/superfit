@@ -1,0 +1,252 @@
+// Motor de cargas: decide el peso de cada serie.
+//
+// Qué hace (y qué NO es "ciencia"):
+// - Doble progresión dentro de un rango de reps: subir reps hasta el tope
+//   del rango y, cuando todas las series llegan al tope sin pasarte de RPE,
+//   subir carga. Es el método estándar en manuales de fuerza (NSCA) — no hay
+//   un ensayo que demuestre que sea "el mejor", es una regla práctica sensata.
+// - e1RM con Epley corregido por repeticiones en reserva (RIR = 10 − RPE,
+//   escala de Zourdos et al. 2016, PMID 26049792). Es una ESTIMACIÓN: el
+//   error crece por encima de ~12 reps y en máquinas varía según el modelo.
+// - Redondeo a las placas reales de la máquina del usuario (mín/máx/salto).
+// - Calibración: sin historial, propone un peso conservador y reajusta las
+//   siguientes series a partir de la primera (RPE declarado).
+import 'dart:math' as math;
+
+class SetRecord {
+  final String sessionId;
+  final double weight;
+  final int reps;
+  final int? rpe;
+  final DateTime at;
+  const SetRecord({
+    required this.sessionId,
+    required this.weight,
+    required this.reps,
+    this.rpe,
+    required this.at,
+  });
+}
+
+class MachineSpec {
+  final double minWeight;
+  final double maxWeight;
+  final double increment;
+  const MachineSpec({this.minWeight = 0, this.maxWeight = 500, this.increment = 2.5});
+  static const generic = MachineSpec();
+}
+
+enum LoadAction { calibrate, increase, addReps, hold, decrease, maxedOut }
+
+class LoadPrescription {
+  final double weight;
+  final int targetReps;
+  final int repMin;
+  final int repMax;
+  final int rpeTarget;
+  final LoadAction action;
+  final String reason;
+  final double? e1rm;
+  final bool plateau; // e1RM sin mejorar en ~4 sesiones / 3+ semanas
+  final bool performanceDrop; // última sesión claramente por debajo
+
+  const LoadPrescription({
+    required this.weight,
+    required this.targetReps,
+    required this.repMin,
+    required this.repMax,
+    required this.rpeTarget,
+    required this.action,
+    required this.reason,
+    this.e1rm,
+    this.plateau = false,
+    this.performanceDrop = false,
+  });
+}
+
+class LoadEngine {
+  /// RPE no indicado → asumimos RIR 2 (zona de trabajo típica).
+  static double rir(int? rpe) => rpe == null ? 2.0 : (10 - rpe).clamp(0, 6).toDouble();
+
+  /// 1RM estimado (Epley) contando las reps que quedaban en reserva.
+  static double e1rm(double weight, int reps, int? rpe) {
+    if (weight <= 0 || reps <= 0) return 0;
+    return weight * (1 + (reps + rir(rpe)) / 30.0);
+  }
+
+  /// Carga que corresponde a `reps` dejando (10 − rpe) en reserva.
+  static double loadFor(double e1rm, int reps, num rpe) {
+    final r = reps + (10 - rpe).clamp(0, 6);
+    return e1rm / (1 + r / 30.0);
+  }
+
+  /// Redondea a un peso que exista en la máquina.
+  static double roundTo(double w, MachineSpec m, {RoundMode mode = RoundMode.nearest}) {
+    final inc = m.increment <= 0 ? 2.5 : m.increment;
+    final steps = (w - m.minWeight) / inc;
+    final k = switch (mode) {
+      RoundMode.down => steps.floorToDouble(),
+      RoundMode.up => steps.ceilToDouble(),
+      RoundMode.nearest => steps.roundToDouble(),
+    };
+    final v = m.minWeight + k * inc;
+    final clamped = v.clamp(m.minWeight, m.maxWeight).toDouble();
+    return double.parse(clamped.toStringAsFixed(2));
+  }
+
+  /// Prescripción para la próxima sesión de un ejercicio.
+  static LoadPrescription nextSession({
+    required List<SetRecord> history,
+    required int repMin,
+    required int repMax,
+    required int rpeTarget,
+    required double coldStartWeight,
+    MachineSpec machine = MachineSpec.generic,
+  }) {
+    if (history.isEmpty) {
+      final w = roundTo(coldStartWeight, machine, mode: RoundMode.down);
+      return LoadPrescription(
+        weight: w,
+        targetReps: repMin,
+        repMin: repMin,
+        repMax: repMax,
+        rpeTarget: rpeTarget,
+        action: LoadAction.calibrate,
+        reason: 'Primera vez: peso conservador. Haz la 1ª serie, marca el RPE '
+            'y ajusto las siguientes.',
+      );
+    }
+
+    final sessions = _bySession(history); // más reciente primero
+    final last = sessions.first;
+    final lastWeight = _workingWeight(last);
+    final work = last.where((s) => (s.weight - lastWeight).abs() < 0.01).toList();
+    final minReps = work.map((s) => s.reps).reduce(math.min);
+    final rpes = work.where((s) => s.rpe != null).map((s) => s.rpe!).toList();
+    final avgRpe = rpes.isEmpty ? null : rpes.reduce((a, b) => a + b) / rpes.length;
+    final lastE1rm = last.map((s) => e1rm(s.weight, s.reps, s.rpe)).reduce(math.max);
+
+    // Tendencias
+    final sessionE1rms = sessions.map((ss) => ss.map((s) => e1rm(s.weight, s.reps, s.rpe)).reduce(math.max)).toList();
+    final plateau = _isPlateau(sessions, sessionE1rms);
+    final drop = sessionE1rms.length >= 3 &&
+        sessionE1rms.first < 0.95 * sessionE1rms.skip(1).take(3).reduce(math.max);
+
+    LoadPrescription build(double w, int reps, LoadAction a, String why) => LoadPrescription(
+          weight: w,
+          targetReps: reps.clamp(repMin, repMax),
+          repMin: repMin,
+          repMax: repMax,
+          rpeTarget: rpeTarget,
+          action: a,
+          reason: why +
+              (plateau ? ' · Llevas varias sesiones sin mejorar: prueba una variante.' : '') +
+              (drop ? ' · Rendimiento más bajo de lo normal: ¿sueño/estrés?' : ''),
+          e1rm: lastE1rm,
+          plateau: plateau,
+          performanceDrop: drop,
+        );
+
+    final rpeOk = avgRpe == null || avgRpe <= rpeTarget + 0.5;
+    final tooHard = (avgRpe != null && avgRpe >= rpeTarget + 1.5) || minReps < repMin;
+
+    // 1) Todas las series al tope del rango sin pasarse de RPE → subir carga
+    if (minReps >= repMax && rpeOk) {
+      var next = roundTo(lastWeight + machine.increment, machine, mode: RoundMode.up);
+      // Si el e1RM dice que vas sobrado, salta más (máx +10%)
+      final byE1rm = roundTo(loadFor(lastE1rm, repMin, rpeTarget), machine, mode: RoundMode.down);
+      final cap = roundTo(lastWeight * 1.10, machine, mode: RoundMode.down);
+      if (byE1rm > next) next = math.min(byE1rm, math.max(cap, next));
+      if (next <= lastWeight) {
+        return build(lastWeight, repMax, LoadAction.maxedOut,
+            'Has llegado al máximo de la máquina. Sube reps, baja el tempo (3 s) o cambia de variante.');
+      }
+      return build(next, repMin, LoadAction.increase,
+          'Completaste $repMax reps en todas las series a RPE ≤ $rpeTarget → sube a ${_fmt(next)} kg y vuelve a $repMin reps.');
+    }
+
+    // 2) Demasiado duro → bajar a lo que dice el e1RM para el centro del rango
+    if (tooHard) {
+      final mid = ((repMin + repMax) / 2).round();
+      var next = roundTo(loadFor(lastE1rm, mid, rpeTarget), machine, mode: RoundMode.down);
+      if (next >= lastWeight) next = roundTo(lastWeight - machine.increment, machine, mode: RoundMode.down);
+      final why = minReps < repMin
+          ? 'No llegaste a $repMin reps → baja a ${_fmt(next)} kg para trabajar en rango.'
+          : 'RPE medio ${avgRpe!.toStringAsFixed(1)} (objetivo $rpeTarget) → baja a ${_fmt(next)} kg.';
+      return build(next, mid, LoadAction.decrease, why);
+    }
+
+    // 3) Dentro del rango → mismo peso, +1 rep
+    final target = math.min(repMax, minReps + 1);
+    return build(lastWeight, target, LoadAction.addReps,
+        'Mismo peso (${_fmt(lastWeight)} kg). Objetivo: $target reps en cada serie.');
+  }
+
+  /// Ajuste dentro de la sesión tras completar una serie.
+  /// Devuelve el peso sugerido para la siguiente serie (o null si no cambia).
+  static double? adjustNextSet({
+    required double weight,
+    required int reps,
+    required int? rpe,
+    required int repMin,
+    required int repMax,
+    required int rpeTarget,
+    MachineSpec machine = MachineSpec.generic,
+    bool calibrating = false,
+  }) {
+    if (rpe == null) {
+      if (reps < repMin) return roundTo(weight - machine.increment, machine, mode: RoundMode.down);
+      return null;
+    }
+    final diff = rpe - rpeTarget;
+    final outOfRange = reps < repMin || reps > repMax + 2;
+    // En calibración ajustamos siempre; en sesiones normales solo si nos
+    // desviamos ≥2 puntos de RPE o salimos del rango (la fatiga acumulada
+    // ya sube el RPE serie a serie, no hay que perseguirla).
+    if (!calibrating && diff.abs() < 2 && !outOfRange) return null;
+    final target = reps.clamp(repMin, repMax);
+    final est = e1rm(weight, reps, rpe);
+    final next = roundTo(loadFor(est, target, rpeTarget), machine);
+    if ((next - weight).abs() < machine.increment * 0.5) return null;
+    return next;
+  }
+
+  // ---------- helpers ----------
+
+  static List<List<SetRecord>> _bySession(List<SetRecord> h) {
+    final map = <String, List<SetRecord>>{};
+    for (final s in h) {
+      map.putIfAbsent(s.sessionId, () => []).add(s);
+    }
+    final l = map.values.toList();
+    for (final ss in l) {
+      ss.sort((a, b) => a.at.compareTo(b.at));
+    }
+    l.sort((a, b) => b.first.at.compareTo(a.first.at));
+    return l;
+  }
+
+  /// Peso de trabajo = el más usado en la sesión (si empate, el mayor).
+  static double _workingWeight(List<SetRecord> s) {
+    final counts = <double, int>{};
+    for (final x in s) {
+      counts[x.weight] = (counts[x.weight] ?? 0) + 1;
+    }
+    final best = counts.entries.toList()
+      ..sort((a, b) => b.value != a.value ? b.value.compareTo(a.value) : b.key.compareTo(a.key));
+    return best.first.key;
+  }
+
+  static bool _isPlateau(List<List<SetRecord>> sessions, List<double> e1rms) {
+    if (e1rms.length < 4) return false;
+    final span = sessions.first.first.at.difference(sessions[3].first.at).inDays;
+    if (span < 18) return false;
+    final recent = math.max(e1rms[0], e1rms[1]);
+    final before = math.max(e1rms[2], e1rms[3]);
+    return recent <= before * 1.01;
+  }
+
+  static String _fmt(double w) => w == w.roundToDouble() ? w.toStringAsFixed(0) : w.toStringAsFixed(1);
+}
+
+enum RoundMode { nearest, down, up }

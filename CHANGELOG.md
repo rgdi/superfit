@@ -2,6 +2,41 @@
 
 Todas las versiones siguen [SemVer](https://semver.org/lang/es/).
 
+## [1.1.0] - 22 nov 2026
+
+### Mi gimnasio (Ajustes)
+- **Mis máquinas**: registra tus máquinas reales por nombre (autocompletado con nombres
+  típicos de Technogym: Selection 700/900, Pure Strength, Element+, Artis…). La app detecta
+  qué ejercicios permite cada una (también en español: "prensa", "jalón", "femoral"…).
+- Alta rápida de un circuito Technogym completo.
+- Pila de pesos por máquina (mínimo, máximo, salto): los pesos sugeridos son siempre
+  pesos que existen en tu máquina.
+- Ajuste de asiento guardado por máquina y visible durante el entreno.
+- 6 tipos de máquina nuevos: adductor, curl de bíceps, extensión de tríceps, crunch,
+  glúteo y deltoide posterior (con sus ejercicios).
+
+### Sistema más inteligente
+- **Perfil de entrenamiento**: días/semana, minutos por sesión, sexo/edad/peso, molestias,
+  músculos prioritarios, duración del bloque.
+- **Generador de programa**: split según días (2-3 cuerpo completo, 4 torso/pierna,
+  5 híbrido, 6 PPL), volumen semanal por grupo según nivel y objetivo, filtrado por tus
+  máquinas y molestias, recortado para caber en tus minutos y con el "por qué" de cada decisión.
+- **Motor de cargas nuevo**: doble progresión real con tu historial, e1RM con RIR,
+  redondeo a las placas de tu máquina, detección de meseta y de caída de rendimiento.
+- **Calibración en sesión**: sin historial, la primera serie ajusta el peso de las siguientes.
+- **"¿Cómo llegas hoy?"**: si llegas cansado, una serie menos y RPE −1.
+- Mesociclo con RPE creciente (7 → 9) y descarga; opción de adelantar la descarga.
+- Rotación de sesiones: si faltas un día, no se pierde la sesión.
+- Cambiar un ejercicio por otro que puedas hacer en tu gimnasio (⇄).
+
+### Correcciones
+- El peso sugerido en el entreno ignoraba el historial (siempre salía el inicial).
+- Mover el RPE de una serie ya marcada la guardaba otra vez (series duplicadas).
+- Desmarcar una serie no la borraba.
+- La copia de seguridad fallaba (exportaba tablas que no existen) y no incluía máquinas/programa.
+- Citas científicas mal atribuidas (ver `docs/EVIDENCIA.md`).
+- Nueva pantalla *Ajustes → Cómo decide la app* con el nivel de evidencia de cada regla.
+
 ## [1.0.0] - 9 jul 2026
 
 ### v1.0.0 - Initial release

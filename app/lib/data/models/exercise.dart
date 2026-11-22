@@ -19,6 +19,8 @@ class Exercise {
   final List<String> contraindications;
   final String tempo;
   final String sourceResearch;
+  /// Otros tipos de máquina con los que también se puede hacer
+  final List<String> altEquipment;
 
   const Exercise({
     required this.id,
@@ -40,6 +42,7 @@ class Exercise {
     required this.contraindications,
     required this.tempo,
     required this.sourceResearch,
+    this.altEquipment = const [],
   });
 
   factory Exercise.fromJson(Map<String, dynamic> j) => Exercise(
@@ -62,7 +65,12 @@ class Exercise {
     contraindications: (j['contraindications'] as List?)?.cast<String>() ?? [],
     tempo: j['tempo'] as String? ?? '2-1-2-0',
     sourceResearch: j['source_research'] as String? ?? '',
+    altEquipment: (j['alt_equipment'] as List?)?.cast<String>() ?? const [],
   );
+
+  /// ¿Se puede hacer con alguno de estos tipos de máquina?
+  bool usableWith(Set<String> machineTypes) =>
+      machineTypes.contains(equipmentId) || altEquipment.any(machineTypes.contains);
 
   String localizedName(String locale) =>
       locale == 'en' ? nameEn : nameEs;

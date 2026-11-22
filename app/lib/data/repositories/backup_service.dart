@@ -5,24 +5,29 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'gym_repo.dart';
 
 class BackupService {
   final Database db;
 
   BackupService(this.db);
 
+  static const _tables = ['set_logs', 'workout_sessions', 'progress_photos', 'body_metrics', 'user_settings'];
+
   /// Exporta toda la base a un JSON y devuelve la ruta al archivo
   Future<File> exportToJson() async {
-    final tables = ['user_settings', 'exercises', 'routines', 'routine_items', 'sessions', 'set_logs', 'progress_photos'];
+    // Solo tablas que existen en el esquema (antes había nombres inexistentes y fallaba)
     final data = <String, dynamic>{
-      'version': 1,
+      'version': 2,
       'exportedAt': DateTime.now().toIso8601String(),
       'data': {},
     };
-    for (final t in tables) {
+    for (final t in _tables) {
       final rows = await db.query(t);
       data['data'][t] = rows;
     }
+    // Máquinas, perfil y programa (SharedPreferences)
+    data['prefs'] = await GymRepo().exportRaw();
     final dir = await getApplicationDocumentsDirectory();
     final ts = DateTime.now().millisecondsSinceEpoch;
     final file = File(p.join(dir.path, 'superfit-backup-$ts.json'));
@@ -38,6 +43,7 @@ class BackupService {
     await db.transaction((txn) async {
       for (final entry in tables.entries) {
         final table = entry.key;
+        if (!_tables.contains(table)) continue;
         final rows = entry.value as List<dynamic>;
         await txn.delete(table);
         for (final row in rows) {
@@ -45,5 +51,7 @@ class BackupService {
         }
       }
     });
+    final prefs = json['prefs'];
+    if (prefs is Map<String, dynamic>) await GymRepo().importRaw(prefs);
   }
 }

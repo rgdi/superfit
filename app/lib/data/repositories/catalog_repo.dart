@@ -5,8 +5,12 @@ import '../models/muscle.dart';
 import '../models/routine.dart';
 import '../models/routine_plan.dart';
 import '../sources/asset_loader.dart';
+import 'gym_repo.dart';
 
 class CatalogRepo {
+  final GymRepo? gymRepo;
+  CatalogRepo([this.gymRepo]);
+
   List<Exercise>? _exercises;
   List<Machine>? _machines;
   List<Muscle>? _muscles;
@@ -28,9 +32,11 @@ class CatalogRepo {
     return _muscles!;
   }
 
+  /// Rutinas de la app + las del programa generado (si existe), primero estas.
   Future<List<Routine>> routines() async {
     _routines ??= await AssetLoader.loadRoutines();
-    return _routines!;
+    final program = await gymRepo?.program();
+    return [...?program?.routines, ..._routines!];
   }
 
   Future<RoutinePlan> plan() async {

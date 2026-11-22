@@ -174,5 +174,13 @@
     "color_hex": "#FF9FF3",
     "region": "leg",
     "side": "back"
+  },
+  {
+    "id": "adductors",
+    "name_es": "Aductores",
+    "name_en": "Adductors",
+    "color_hex": "#4ECDC4",
+    "region": "leg",
+    "side": "front"
   }
 ]

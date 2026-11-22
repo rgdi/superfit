@@ -8,6 +8,11 @@ class SetLoggerRow extends StatefulWidget {
   final int initialReps;
   final int? initialRpe;
   final String? technique; // rest_pause, drop_set, myo_reps, null
+  final double step; // salto de peso de la máquina
+  final double minWeight;
+  final double maxWeight;
+  final bool initialCompleted;
+  final int rpeHint; // posición inicial del slider (no se guarda hasta tocarlo)
   final void Function(double weight, int reps, int? rpe, bool completed) onSave;
 
   const SetLoggerRow({
@@ -17,6 +22,11 @@ class SetLoggerRow extends StatefulWidget {
     required this.initialReps,
     this.initialRpe,
     this.technique,
+    this.step = 2.5,
+    this.minWeight = 0,
+    this.maxWeight = 500,
+    this.initialCompleted = false,
+    this.rpeHint = 8,
     required this.onSave,
   });
 
@@ -36,7 +46,10 @@ class _SetLoggerRowState extends State<SetLoggerRow> {
     _weight = widget.initialWeight;
     _reps = widget.initialReps;
     _rpe = widget.initialRpe;
+    _completed = widget.initialCompleted;
   }
+
+  String _fmtW(double w) => w == w.roundToDouble() ? w.toStringAsFixed(0) : w.toStringAsFixed(2).replaceAll(RegExp(r'0$'), '');
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +79,9 @@ class _SetLoggerRowState extends State<SetLoggerRow> {
                     children: [
                       _numStepper(
                         label: 'Peso (kg)',
-                        value: _weight.toStringAsFixed(1),
-                        onMinus: () => setState(() => _weight = (_weight - 2.5).clamp(0, 500)),
-                        onPlus: () => setState(() => _weight = (_weight + 2.5).clamp(0, 500)),
+                        value: _fmtW(_weight),
+                        onMinus: () => setState(() => _weight = (_weight - widget.step).clamp(widget.minWeight, widget.maxWeight).toDouble()),
+                        onPlus: () => setState(() => _weight = (_weight + widget.step).clamp(widget.minWeight, widget.maxWeight).toDouble()),
                       ),
                       _numStepper(
                         label: 'Reps',
@@ -95,11 +108,11 @@ class _SetLoggerRowState extends State<SetLoggerRow> {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Text('RPE:', style: TextStyle(color: Colors.white60, fontSize: 12)),
+                Text(_rpe == null ? 'RPE (toca):' : 'RPE:', style: const TextStyle(color: Colors.white60, fontSize: 12)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Slider(
-                    value: (_rpe ?? 8).toDouble(),
+                    value: (_rpe ?? widget.rpeHint).clamp(1, 10).toDouble(),
                     min: 1,
                     max: 10,
                     divisions: 9,

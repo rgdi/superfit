@@ -13,10 +13,39 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(userSettingsProvider);
     final notifier = ref.read(userSettingsProvider.notifier);
+    final machines = ref.watch(gymMachinesProvider);
+    final profile = ref.watch(trainingProfileProvider);
+    final program = ref.watch(programProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Ajustes')),
       body: ListView(
         children: [
+          const _SectionHeader('Mi gimnasio'),
+          ListTile(
+            leading: const Icon(Icons.fitness_center, color: AppTheme.primary),
+            title: const Text('Mis máquinas'),
+            subtitle: Text(machines.isEmpty
+                ? 'Añade tus Technogym (u otras) para pesos y ejercicios reales'
+                : '${machines.length} máquinas registradas'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/machines'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person_outline, color: AppTheme.primary),
+            title: const Text('Mi perfil de entrenamiento'),
+            subtitle: Text('${profile.daysPerWeek} días · ${profile.sessionMinutes} min'
+                '${profile.injuries.isEmpty ? '' : ' · ${profile.injuries.length} molestia(s)'}'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/profile'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.auto_awesome, color: AppTheme.primary),
+            title: const Text('Mi programa'),
+            subtitle: Text(program == null ? 'Sin generar' : program.splitName),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/program'),
+          ),
+          const Divider(),
           const _SectionHeader('Entrenamiento'),
           ListTile(
             title: const Text('Nivel'),
@@ -70,6 +99,12 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           const _SectionHeader('Datos'),
           ListTile(
+            title: const Text('Copia de seguridad'),
+            subtitle: const Text('Exportar / importar todos tus datos'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/backup'),
+          ),
+          ListTile(
             title: const Text('Resetear todo'),
             subtitle: const Text('Borra sesiones, fotos y métricas. Irreversible.'),
             trailing: const Icon(Icons.delete_forever, color: AppTheme.secondary),
@@ -78,12 +113,14 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           const _SectionHeader('Acerca de'),
           const ListTile(
-            title: Text('SuperFit v1.0.0'),
-            subtitle: Text('100% offline · sin tracking · basado en evidencia'),
+            title: Text('SuperFit v1.1.0'),
+            subtitle: Text('100% offline · sin tracking'),
           ),
-          const ListTile(
-            title: Text('Referencias científicas'),
-            subtitle: Text('Schoenfeld, NSCA, ACSM, Helms (ver research/05)'),
+          ListTile(
+            title: const Text('Cómo decide la app'),
+            subtitle: const Text('Qué tiene respaldo científico y qué es criterio práctico'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/how'),
           ),
         ],
       ),

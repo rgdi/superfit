@@ -34,6 +34,38 @@ class WorkoutItem {
     supersetWith: j['superset_with'] as String?,
   );
 
+  Map<String, dynamic> toJson() => {
+    'exercise_id': exerciseId,
+    'sets': sets,
+    'reps_target': repsTarget,
+    'rpe_target': rpeTarget,
+    'rest_seconds': restSeconds,
+    'tempo': tempo,
+    'notes_es': notesEs,
+    'notes_en': notesEn,
+    'superset_with': supersetWith,
+  };
+
+  WorkoutItem copyWith({String? exerciseId, int? sets, int? rpeTarget, String? notesEs}) => WorkoutItem(
+    exerciseId: exerciseId ?? this.exerciseId,
+    sets: sets ?? this.sets,
+    repsTarget: repsTarget,
+    rpeTarget: rpeTarget ?? this.rpeTarget,
+    restSeconds: restSeconds,
+    tempo: tempo,
+    notesEs: notesEs ?? this.notesEs,
+    notesEn: notesEn,
+    supersetWith: supersetWith,
+  );
+
+  /// (min, max) del rango de reps "8-12" → (8, 12); "10" → (10, 10)
+  (int, int) get repRange {
+    final parts = repsTarget.split('-').map((p) => int.tryParse(p.trim())).toList();
+    final lo = parts.isNotEmpty ? parts.first ?? 8 : 8;
+    final hi = parts.length > 1 ? parts[1] ?? lo : lo;
+    return (lo, hi < lo ? lo : hi);
+  }
+
   String? localizedNotes(String locale) =>
       locale == 'en' ? notesEn : notesEs;
 }

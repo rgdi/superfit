@@ -41,6 +41,21 @@ class Routine {
 
   String localizedName(String locale) =>
       locale == 'en' ? nameEn : nameEs;
+
+  bool get isGenerated => id.startsWith('gen_');
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name_es': nameEs,
+    'name_en': nameEn,
+    'day_of_week': dayOfWeek,
+    'estimated_minutes': estimatedMinutes,
+    'level': level,
+    'goal': goal,
+    'warmup': warmup.map((w) => w.toJson()).toList(),
+    'workout': workout.map((w) => w.toJson()).toList(),
+    'cooldown': cooldown.map((c) => c.toJson()).toList(),
+  };
 }
 
 class WarmupItem {
@@ -59,6 +74,13 @@ class WarmupItem {
   );
 
   String localizedName(String locale) => locale == 'en' ? nameEn : nameEs;
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'name_es': nameEs,
+    'name_en': nameEn,
+    'duration_seconds': durationSeconds,
+  };
 }
 
 class CooldownItem {
@@ -77,4 +99,11 @@ class CooldownItem {
   );
 
   String localizedName(String locale) => locale == 'en' ? nameEn : nameEs;
+
+  Map<String, dynamic> toJson() => {
+    'type': type,
+    'name_es': nameEs,
+    'name_en': nameEn,
+    'duration_seconds': durationSeconds,
+  };
 }

@@ -14,7 +14,8 @@
 ## ✨ Features
 
 - 🧠 **Adaptativa** — aprende de tu RPE, adherencia y PRs; ajusta pesos, descansos y ejercicios
-- 🔬 **Científica** — basada en meta-análisis de Schoenfeld, NSCA, ACSM, Helms (10 PMIDs verificados)
+- 🏋️ **Tus máquinas** — registra tus Technogym (u otras) desde Ajustes: nombre, pila de pesos y ajuste de asiento
+- 🔬 **Honesta con la evidencia** — cada regla indica si tiene evidencia sólida, parcial o es criterio práctico
 - 📊 **Upper/Lower 4×/semana** — frecuencia 2×/grupo, 38 min por sesión
 - 🖼️ **Mapa muscular interactivo** — silueta con músculos activados por ejercicio (22 músculos)
 - 📷 **Galería de progreso** — fotos por fecha con comparador lado a lado
@@ -45,9 +46,13 @@ En tags `v*` se publica release automática.
 
 ## 🧬 Algoritmos
 
-- **Doble progresión** (Helms 2014): sube peso al completar reps objetivo a RPE ≤ target dos veces seguidas
-- **Detección de meseta** (custom): 3+ semanas sin subir peso → propone variante
-- **RPE auto-regulación** (Zourdos 2016): RPE ≥ 9 → -5% peso; RPE ≤ 7 → +2.5kg
+- **Doble progresión** (criterio práctico, NSCA): sube reps dentro del rango; cuando todas las series llegan al tope sin pasarte de RPE, sube peso — redondeado a las placas reales de **tu** máquina
+- **e1RM con RIR** (escala RPE/RIR de Zourdos 2016, PMID 26049792): estima tu fuerza para recalcular cargas
+- **Calibración en sesión**: sin historial, la 1ª serie calibra el peso de las siguientes
+- **Meseta y caída de rendimiento**: 4 sesiones sin mejorar → propone variante; caída en muchos ejercicios → propone adelantar la descarga
+- **Programa a medida**: split según días, volumen por grupo, filtrado por tus máquinas y molestias, ajustado a tus minutos
+
+Qué tiene respaldo y qué es criterio práctico: ver [`docs/EVIDENCIA.md`](docs/EVIDENCIA.md) o *Ajustes → Cómo decide la app*.
 - **Cycle planning 4:1** (Coleman 2014): 3 semanas carga + 1 deload
 - **1RM Epley** (Epley 1985): `peso × (1 + reps/30)`
 - **Fatigue detection**: RPE promedio 7 días > 8.5 → sugerir deload

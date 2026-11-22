@@ -1,7 +1,8 @@
 # Referencias bibliográficas — formato Vancouver
 
 > Lista maestra. Verificable vía PubMed (PMID) o DOI.
-> **VERIFICADAS** contra NCBI el 9 jul 2026 con `python3 scripts/verify_pmids.py`.
+> Auditadas de nuevo contra NCBI el 22 nov 2026. Varias citas estaban mal atribuidas (marcadas con ⚠️ CORREGIDO).
+> Las referencias sin PMID no se han podido verificar automáticamente.
 
 ## Volumen y frecuencia
 
@@ -16,8 +17,12 @@
 3. **Schoenfeld BJ, Grgic J, Ogborn D, Krieger JW.** Strength and Hypertrophy Adaptations Between Low- vs. High-Load Resistance Training: A Systematic Review and Meta-analysis. *J Strength Cond Res.* 2017;31(12):3508-3523.
    - DOI: 10.1519/JSC.0000000000002206
 
-4. **Krieger J.** Meta-analysis of the dose-response relationship of resistance training to muscle hypertrophy. *J Strength Cond Res.* 2024.
-   - DOI: 10.1519/JSC.0000000000004716
+4. **Krieger JW.** Single vs. multiple sets of resistance exercise for muscle hypertrophy: a meta-analysis. *J Strength Cond Res.* 2010;24(4):1150-9.
+   - **PMID: 20300012** (VERIFICADO 22 nov 2026)
+   - ⚠️ CORREGIDO: la versión anterior citaba un "Krieger 2024" con DOI inventado.
+
+4b. **Pelland JC, et al.** The Resistance Training Dose Response: Meta-Regressions Exploring the Effects of Weekly Volume and Frequency on Muscle Hypertrophy and Strength. *Sports Med.* 2026.
+   - **PMID: 41343037** (VERIFICADO 22 nov 2026)
 
 5. **ACSM Position Stand.** Progression Models in Resistance Training for Healthy Adults. *Med Sci Sports Exerc.* 2009 (actualización 2022).
    - DOI: 10.1249/MSS.0b013e3181915670
@@ -31,8 +36,12 @@
 
 ## Descanso
 
-8. **Grgic J, Trexler ET, Lazinica B, Pedisic Z.** Effects of Rest Interval Duration in Resistance Training on Measures of Muscular Strength, Hypertrophy, and Power in Various Populations: A Systematic Review and Meta-Analysis. *Sports Med.* 2018;48(3):717-724.
+8. **Grgic J, et al.** Effects of Rest Interval Duration in Resistance Training on Measures of Muscular Strength: A Systematic Review. *Sports Med.* 2018;48(1):137-151.
    - **PMID: 28933024** (VERIFICADO)
+   - ⚠️ CORREGIDO: el título anterior decía "Strength, Hypertrophy, and Power"; el trabajo solo analiza FUERZA.
+
+8b. **Schoenfeld BJ, et al.** Longer Interset Rest Periods Enhance Muscle Strength and Hypertrophy in Resistance-Trained Men. *J Strength Cond Res.* 2016;30(7):1805-12.
+   - **PMID: 26605807** (VERIFICADO 22 nov 2026)
    - DOI: 10.1007/s40279-017-0815-0
 
 9. **Refalo MC, Remmert JF, Pelland JC, et al.** Accuracy of Intraset Repetitions-in-Reserve Predictions During the Bench Press Exercise in Resistance-Trained Men and Women. *J Strength Cond Res.* 2024;38(3):464-471.
@@ -51,12 +60,13 @@
 
 ## RPE y auto-regulación
 
-13. **Zourdos JC, Dolan CP, Quiles JM, et al.** Modified Daily Undulating Periodization Model Produces Greater Performance Than a Traditional Configuration in Powerlifters. *J Strength Cond Res.* 2016;30(3):784-791.
-    - **PMID: 26332783** (VERIFICADO) — citado en research como referencia RPE/periodización ondulante.
+13. **Zourdos MC, et al.** Novel Resistance Training-Specific Rating of Perceived Exertion Scale Measuring Repetitions in Reserve. *J Strength Cond Res.* 2016;30(1):267-75.
+    - **PMID: 26049792** (VERIFICADO 22 nov 2026)
+    - ⚠️ CORREGIDO: antes se usaba el PMID 26332783, que es un estudio de periodización ondulante en powerlifters, NO la escala RPE/RIR.
 
-14. **Helms ER, Fitschen PJ, Poole CN, et al.** Evidence-based recommendations for natural bodybuilding contest preparation: nutrition and supplementation. *J Int Soc Sports Nutr.* 2014;11:20.
-    - **PMID: 24864135** (VERIFICADO)
-    - DOI: 10.1186/1550-2783-11-20
+14. **Helms ER, et al.** RPE vs. Percentage 1RM Loading in Periodized Programs Matched for Sets and Repetitions. *Front Physiol.* 2018;9:247.
+    - **PMID: 29628895** (VERIFICADO 22 nov 2026)
+    - ⚠️ CORREGIDO: antes se citaba Helms 2014 (PMID 24864135) como base de la "doble progresión". Ese artículo trata de **nutrición y suplementación** para culturismo; no dice nada de progresión de cargas.
 
 15. **Helms ER, Zourdos MC, Meyer J, et al.** A Day-to-Day, Week-to-Week Mesocycle Model of Autoregulated Resistance Training. *Sports.* 2023;11(7):133.
     - DOI: 10.3390/sports11070133
@@ -74,8 +84,9 @@
 
 ## Máquinas vs peso libre
 
-19. **Haugen ME, Vårvik FT, Larsen S, Wernbom M, Løvold S, Raastad T.** Free Weight vs Machine-Based Resistance Training: A Systematic Review and Meta-analysis. *J Strength Cond Res.* 2021.
-    - DOI: 10.1519/JSC.0000000000003970
+19. **Haugen ME, et al.** Effect of free-weight vs. machine-based strength training on maximal strength, hypertrophy and jump performance – a systematic review and meta-analysis. *BMC Sports Sci Med Rehabil.* 2023;15:103.
+    - **PMID: 37582807** (VERIFICADO 22 nov 2026)
+    - ⚠️ CORREGIDO: año, revista y DOI anteriores no correspondían a este trabajo.
 
 20. **NSCA.** Exercise Technique Manual for Resistance Training (3rd ed.). Human Kinetics, 2021.
 
@@ -119,3 +130,8 @@
   - **RPE/auto-regulación**: Helms 24864135 + Zourdos 26332783
   - **Periodización**: Spiering 36580280 + Issurin 20199119
   - **Hipertrofia sensorial**: Wackerhage 30335577
+
+## Añadidas en v1.1
+
+21. **Bickel CS, Cross JM, Bamman MM.** Exercise dosing to retain resistance training adaptations in young and older adults. *Med Sci Sports Exerc.* 2011;43(7):1177-87.
+    - **PMID: 21131862** (VERIFICADO 22 nov 2026)

@@ -15,6 +15,7 @@ import '../../domain/usecases/advanced_analytics.dart';
 import '../history/history_screen.dart';
 import '../progress/progress_screen.dart';
 import '../settings/settings_screen.dart';
+import 'program_today_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -82,7 +83,13 @@ class _HomeTab extends ConsumerWidget {
               const SizedBox(height: 24),
               _streakCard(ref),
               const SizedBox(height: 16),
-              _todayCard(context, ref, snap, locale),
+              if (ref.watch(programProvider) != null)
+                ProgramTodayCard(program: ref.watch(programProvider)!)
+              else ...[
+                const CreateProgramCta(),
+                const SizedBox(height: 12),
+                _todayCard(context, ref, snap, locale),
+              ],
               const SizedBox(height: 16),
               _lastSessionCard(ref),
               const SizedBox(height: 16),
@@ -234,7 +241,7 @@ class _HomeTab extends ConsumerWidget {
           color: AppTheme.surfaceMid,
           child: ListTile(
             leading: const Icon(Icons.check_circle, color: AppTheme.primary),
-            title: Text('Última: ${s.routineId}'),
+            title: Text('Última: ${ref.read(programProvider)?.routines.where((r) => r.id == s.routineId).firstOrNull?.nameEs ?? s.routineId.replaceAll('_', ' ')}'),
             subtitle: Text(
               '${s.startedAt.day}/${s.startedAt.month} · ${s.totalSets ?? 0} series · RPE ${s.perceivedExertion ?? "—"}',
             ),
