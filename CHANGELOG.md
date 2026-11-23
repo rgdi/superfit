@@ -2,6 +2,47 @@
 
 Todas las versiones siguen [SemVer](https://semver.org/lang/es/).
 
+## [1.6.0] - 23 nov 2026
+
+### Auditoría completa (ver docs/AUDITORIA.md)
+**Planificación**
+- Generador nuevo: reparte las series por músculo (no por grupo) y por minuto disponible.
+  Primero asegura los patrones básicos de cada sesión (empuje, tirones vertical y horizontal,
+  pierna) y después añade el ejercicio que más volumen útil aporta por minuto.
+- Objetivo semanal único por músculo para generador, mapa y programa (antes había tres).
+  Mantenimiento = 1/3, fuerza ×0,8, músculos prioritarios ×1,35; lumbares, oblicuos y
+  trapecio superior cuentan como "opcional" (se trabajan de forma indirecta).
+- Penaliza pasarse de 1,5× el objetivo y equilibra empuje/tirón.
+- El tiempo estimado incluye calentamiento y nunca supera tus minutos.
+- Pantalla Programa: barras de volumen planificado frente al objetivo de cada músculo.
+- Datos corregidos: pec deck y cruce de poleas son empuje horizontal; prensa y hack
+  trabajan aductores (Kubo 2019), no isquios; el remo trabaja deltoides posterior y bíceps.
+- Lesiones: press de hombro se excluye con pinzamiento; elevaciones laterales y crunch
+  pasan a "con precaución" en vez de excluirse.
+
+**Cargas y progresión**
+- Detecta saltos de peso demasiado grandes para tu máquina: mantiene el peso y sube reps.
+- Si fue claramente fácil (RPE ≤ objetivo−2) sube aunque no hayas tocado el tope.
+- Las semanas de descarga y las series de calentamiento/drop ya no cuentan para progresar.
+- Descarga: un único recorte del 10 % sobre tu peso real (antes se aplicaba dos veces).
+- Series top + back-off: el peso de trabajo sale de la serie principal.
+- El modelo necesita 3 sesiones para opinar, redondea a pesos reales de tu máquina,
+  predice reps y tiene en cuenta la fatiga dentro de la misma sesión.
+- Recuperación: si los músculos de la sesión de hoy no están recuperados propone otra
+  sesión o descansar. Rotación por la sesión hecha hace más tiempo.
+- Cálculo de semanas del mesociclo corregido en el cambio de hora.
+
+**Fallos de la app**
+- Se podían perder máquinas y ajustes si se guardaba antes de terminar de cargar.
+- Sesiones a medias duplicadas: ahora preguntas si continuar o descartar.
+- Al reanudar un entreno se recuperan series extra, back-offs y cambios de ejercicio.
+- Copia de seguridad completa (todos los ajustes) y restauración que recarga todo.
+- "Borrar todo" borra de verdad (incluidas las fotos).
+- Inicio: récords comparados con todo tu historial; la semana va de lunes a domingo.
+- Onboarding, comparación de fotos, métricas corporales con coma decimal, cargas infinitas
+  en historial y detalle de rutina.
+- Eliminada la opción de libras (no estaba implementada en ningún sitio).
+
 ## [1.5.0] - 23 nov 2026
 
 ### Rediseño minimalista

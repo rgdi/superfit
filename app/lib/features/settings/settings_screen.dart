@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
+import '../../data/repositories/backup_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/user_settings.dart';
 
@@ -86,16 +87,6 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           const _SectionHeader('Preferencias'),
           ListTile(
-            title: const Text('Unidades'),
-            subtitle: Text(settings.units == WeightUnits.kg ? 'Kilogramos' : 'Libras'),
-            trailing: Switch(
-              value: settings.units == WeightUnits.lb,
-              onChanged: (v) => notifier.update(settings.copyWith(
-                units: v ? WeightUnits.lb : WeightUnits.kg,
-              )),
-            ),
-          ),
-          ListTile(
             title: const Text('Idioma'),
             subtitle: Text(settings.locale == 'es' ? 'Español' : 'English'),
             trailing: const Icon(Icons.chevron_right),
@@ -115,12 +106,12 @@ class SettingsScreen extends ConsumerWidget {
             title: const Text('Resetear todo'),
             subtitle: const Text('Borra sesiones, fotos y métricas. Irreversible.'),
             trailing: const Icon(Icons.delete_forever, color: AppTheme.secondary),
-            onTap: () => _confirmReset(context, notifier),
+            onTap: () => _confirmReset(context, ref),
           ),
           const Divider(),
           const _SectionHeader('Acerca de'),
           const ListTile(
-            title: Text('SuperFit v1.5.0'),
+            title: Text('SuperFit v1.6.0'),
             subtitle: Text('100% offline · sin tracking'),
           ),
           ListTile(
@@ -181,12 +172,12 @@ class SettingsScreen extends ConsumerWidget {
     if (pick != null) await n.update(s.copyWith(goal: pick));
   }
 
-  Future<void> _confirmReset(BuildContext ctx, UserSettingsNotifier n) async {
+  Future<void> _confirmReset(BuildContext ctx, WidgetRef ref) async {
     final ok = await showDialog<bool>(
       context: ctx,
       builder: (_) => AlertDialog(
         title: const Text('¿Borrar todo?'),
-        content: const Text('Esta acción es irreversible.'),
+        content: const Text('Se borran sesiones, series, métricas, fotos, máquinas, perfil y programa. No se puede deshacer.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
           FilledButton(
@@ -198,12 +189,9 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
     if (ok == true) {
-      await n.reset();
-      if (ctx.mounted) {
-        ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(content: Text('Datos borrados. Reinicia la app.')),
-        );
-      }
+      final db = await ref.read(databaseProvider.future);
+      await BackupService(db).wipeAll();
+      invalidateAllData(ref); // vuelve al onboarding con todo vacío
     }
   }
 }

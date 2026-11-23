@@ -314,7 +314,9 @@ class ProgramGenerator {
       final workout = [for (final it in items) _item(it.ex, it.sets)];
       final suffix = _suffix(sessions, s);
       routines.add(Routine(
-        id: 'gen_${s + 1}',
+        // Id único por programa: si regeneras, las sesiones antiguas no
+        // apuntan a una rutina distinta con el mismo id
+        id: 'gen_${(now ?? DateTime.now()).millisecondsSinceEpoch.toRadixString(36)}_${s + 1}',
         nameEs: '${sessions[s].nameEs}$suffix',
         nameEn: '${sessions[s].nameEn}$suffix',
         dayOfWeek: kScheduleDays[days]![s % kScheduleDays[days]!.length],

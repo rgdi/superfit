@@ -78,9 +78,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       final service = BackupService(db);
       await service.importFromJson(selected);
       setState(() => _lastImportName = p.basename(selected.path));
-      // Invalidar providers
-      ref.invalidate(catalogRepoProvider);
-      ref.invalidate(sessionRepoProvider);
+      // Recargar TODO el estado en memoria con lo restaurado
+      invalidateAllData(ref);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

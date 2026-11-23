@@ -10,6 +10,7 @@ import '../../data/models/routine.dart';
 import '../../domain/engine/load_engine.dart';
 import '../../domain/engine/program_coach.dart';
 import '../../domain/engine/muscle_stats.dart';
+import '../workout/session_starter.dart';
 import '../../domain/ai/ai_service.dart' show kReadinessPrefix;
 import '../../widgets/exercise_animation.dart';
 
@@ -121,6 +122,13 @@ class ProgramTodayCard extends ConsumerWidget {
   }
 
   Future<void> _start(BuildContext context, WidgetRef ref, Routine r) async {
+    // Antes de nada: ¿hay una sesión a medias?
+    final (go, resumeId) = await resolveActiveSession(context, ref);
+    if (!go || !context.mounted) return;
+    if (resumeId != null) {
+      context.push('/workout/$resumeId');
+      return;
+    }
     final readiness = await showModalBottomSheet<Readiness>(
       context: context,
       builder: (_) => SafeArea(

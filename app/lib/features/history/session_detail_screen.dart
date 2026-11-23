@@ -18,7 +18,7 @@ class SessionDetailScreen extends ConsumerWidget {
       body: FutureBuilder<WorkoutSession?>(
         future: ref.read(sessionRepoProvider).sessionById(sessionId),
         builder: (context, sessSnap) {
-          if (!sessSnap.hasData) {
+          if (sessSnap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
           final session = sessSnap.data;
@@ -45,7 +45,13 @@ class SessionDetailScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(session.routineId, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                          FutureBuilder(
+                            future: ref.read(catalogRepoProvider).routineById(session.routineId),
+                            builder: (_, r) => Text(
+                              r.data?.nameEs ?? (session.routineId.startsWith('gen_') ? 'Sesión de un programa anterior' : session.routineId),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Text(
                             '${session.startedAt.toString().split('.').first}\n'
@@ -76,7 +82,8 @@ class SessionDetailScreen extends ConsumerWidget {
                                 backgroundColor: AppTheme.surfaceLight,
                                 radius: 14,
                                 child: Text(
-                                  '${s.setNumber}',
+                                  // Aproximaciones (<0) como A1, A2…; drops (>100) como D
+                                  s.setNumber < 0 ? 'A${-s.setNumber}' : (s.setNumber > 100 ? 'D' : '${s.setNumber}'),
                                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                                 ),
                               ),

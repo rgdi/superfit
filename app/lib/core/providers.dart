@@ -183,3 +183,21 @@ final performanceModelProvider = FutureProvider<PerformanceModel>((ref) async {
   final exercises = await ref.read(catalogRepoProvider).exercises();
   return AiService.train(ref.read(setRepoProvider), exercises);
 });
+
+/// Tras restaurar una copia o borrarlo todo: recarga todo el estado en memoria
+/// (si no, la primera edición volvería a guardar los datos viejos).
+void invalidateAllData(WidgetRef ref) {
+  for (final ProviderOrFamily p in <ProviderOrFamily>[
+    userSettingsProvider,
+    gymMachinesProvider,
+    trainingProfileProvider,
+    programProvider,
+    performanceModelProvider,
+    onboardingDoneProvider,
+    allSessionsProvider,
+    catalogRepoProvider,
+    sessionRepoProvider,
+  ]) {
+    ref.invalidate(p);
+  }
+}

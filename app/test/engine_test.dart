@@ -359,10 +359,10 @@ void main() {
     });
 
     test('rotación: tras gen_1 toca gen_2; si faltas días no se salta', () {
-      final r = coach.nextRoutine([FinishedSessionInfo('gen_1', DateTime(2026, 1, 5), 8)]);
-      expect(r.id, 'gen_2');
-      expect(coach.nextRoutine([FinishedSessionInfo('gen_4', DateTime(2026, 1, 5), 8)]).id, 'gen_1');
-      expect(coach.nextRoutine(const []).id, 'gen_1');
+      final r = coach.nextRoutine([FinishedSessionInfo(program.rotation[0], DateTime(2026, 1, 5), 8)]);
+      expect(r.id, program.rotation[1]);
+      expect(coach.nextRoutine([FinishedSessionInfo(program.rotation[3], DateTime(2026, 1, 5), 8)]).id, program.rotation[0]);
+      expect(coach.nextRoutine(const []).id, program.rotation[0]);
     });
 
     test('descarga: mitad de series; cansado: −1 serie y RPE −1', () {
@@ -377,10 +377,10 @@ void main() {
 
     test('rotación robusta: si cambias el orden, no se salta ninguna sesión', () {
       final recent = [
-        FinishedSessionInfo('gen_3', DateTime(2026, 1, 7), 8), // hizo la 3 antes que la 2
-        FinishedSessionInfo('gen_1', DateTime(2026, 1, 5), 8),
+        FinishedSessionInfo(program.rotation[2], DateTime(2026, 1, 7), 8), // hizo la 3 antes que la 2
+        FinishedSessionInfo(program.rotation[0], DateTime(2026, 1, 5), 8),
       ];
-      expect(coach.nextRoutine(recent).id, 'gen_2');
+      expect(coach.nextRoutine(recent).id, program.rotation[1]);
     });
 
     test('si los músculos de la sesión siguiente siguen fatigados, propone otra', () {
@@ -403,7 +403,7 @@ void main() {
     test('semana completada → sugiere descanso', () {
       final now = DateTime(2026, 1, 9); // viernes
       final recent = [
-        for (int d = 5; d <= 8; d++) FinishedSessionInfo('gen_${d - 4}', DateTime(2026, 1, d, 18), 8),
+        for (int d = 5; d <= 8; d++) FinishedSessionInfo(program.rotation[d - 5], DateTime(2026, 1, d, 18), 8),
       ].reversed.toList();
       final a = coach.adviseToday(now: now, recent: recent, daysPerWeek: 4);
       expect(a.suggestRest, isTrue);

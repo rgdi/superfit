@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_theme.dart';
-import '../../domain/usecases/advanced_analytics.dart';
 
 class FatigueRing extends StatelessWidget {
   final double fatigue; // 0..1

@@ -8,6 +8,9 @@ import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/body_metric.dart';
 
+/// Métricas corporales; se invalida al añadir una para refrescar la pantalla.
+final bodyMetricsProvider = FutureProvider<List<BodyMetric>>((ref) => ref.read(bodyMetricRepoProvider).all());
+
 class ProgressScreen extends ConsumerWidget {
   const ProgressScreen({super.key});
 
@@ -22,7 +25,7 @@ class ProgressScreen extends ConsumerWidget {
         ),
       ]),
       body: FutureBuilder<List<BodyMetric>>(
-        future: ref.read(bodyMetricRepoProvider).all(),
+        future: ref.watch(bodyMetricsProvider.future),
         builder: (context, snap) {
           if (!snap.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -281,17 +284,17 @@ class ProgressScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: weight, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Peso (kg)')),
+              TextField(controller: weight, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Peso (kg)')),
               const SizedBox(height: 8),
-              TextField(controller: bodyFat, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '% Grasa')),
+              TextField(controller: bodyFat, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: '% Grasa')),
               const SizedBox(height: 8),
-              TextField(controller: chest, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Pecho (cm)')),
+              TextField(controller: chest, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Pecho (cm)')),
               const SizedBox(height: 8),
-              TextField(controller: waist, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Cintura (cm)')),
+              TextField(controller: waist, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Cintura (cm)')),
               const SizedBox(height: 8),
-              TextField(controller: arm, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Brazo (cm)')),
+              TextField(controller: arm, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Brazo (cm)')),
               const SizedBox(height: 8),
-              TextField(controller: thigh, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Muslo (cm)')),
+              TextField(controller: thigh, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Muslo (cm)')),
             ],
           ),
         ),
@@ -302,15 +305,24 @@ class ProgressScreen extends ConsumerWidget {
       ),
     );
     if (ok != true) return;
+    // Acepta coma decimal ("75,5")
+    double? n(TextEditingController c) => double.tryParse(c.text.trim().replaceAll(',', '.'));
+    final values = [n(weight), n(bodyFat), n(chest), n(waist), n(arm), n(thigh)];
+    if (values.every((v) => v == null)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No has escrito ningún valor válido.')));
+      }
+      return;
+    }
     await ref.read(bodyMetricRepoProvider).add(
       date: DateTime.now(),
-      weightKg: double.tryParse(weight.text),
-      bodyFatPct: double.tryParse(bodyFat.text),
-      chestCm: double.tryParse(chest.text),
-      waistCm: double.tryParse(waist.text),
-      armCm: double.tryParse(arm.text),
-      thighCm: double.tryParse(thigh.text),
+      weightKg: values[0],
+      bodyFatPct: values[1],
+      chestCm: values[2],
+      waistCm: values[3],
+      armCm: values[4],
+      thighCm: values[5],
     );
-    if (context.mounted) Navigator.pop(context);
+    ref.invalidate(bodyMetricsProvider);
   }
 }

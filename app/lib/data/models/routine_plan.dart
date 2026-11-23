@@ -1,5 +1,4 @@
 // Modelo del Plan de Rutinas (cargado desde assets/data/routine_plan.json)
-import 'routine.dart';
 
 class RoutinePlan {
   final String version;

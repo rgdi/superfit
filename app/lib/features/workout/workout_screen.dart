@@ -36,6 +36,8 @@ import '../gym/scan_machine.dart';
 
 export '../../domain/ai/ai_service.dart' show kReadinessPrefix;
 
+const _swapsPrefix = 'swaps_';
+
 class _PlannedSet {
   final int slot; // nº de serie guardado: <0 aproximación, 1..n efectivas, >100 drop
   SetKind kind;
@@ -116,6 +118,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       _profile = await gym.profile();
       for (final s in await ref.read(setRepoProvider).setsForSession(session.id)) {
         _logged['${s.exerciseId}#${s.setNumber}'] = s;
+      }
+      // Cambios de ejercicio guardados (para reanudar)
+      for (final kv in (prefs.getStringList('$_swapsPrefix${session.id}') ?? const <String>[])) {
+        final parts = kv.split('=');
+        final i = int.tryParse(parts.first);
+        if (i != null && parts.length == 2) _swaps[i] = parts[1];
       }
       try {
         _ai = await ref.read(performanceModelProvider.future);
@@ -251,15 +259,19 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
 
   List<_PlannedSet> _buildPlan(String exId, WorkoutItem item, double w, int reps, MachineSpec spec) {
     final out = <_PlannedSet>[];
-    // Recuperar series ya hechas de tipos extra (reanudar)
-    for (final s in _logged.values.where((s) => s.exerciseId == exId && (s.setNumber < 0 || s.setNumber > 100))) {
+    final mine = _logged.values.where((s) => s.exerciseId == exId).toList();
+    // Reanudar: aproximaciones, drops y series extra (+ Serie) ya registradas
+    for (final s in mine.where((s) => s.setNumber < 0 || s.setNumber > item.sets)) {
       out.add(_PlannedSet(s.setNumber, SetKindX.parse(s.technique), s.weight, s.reps));
     }
+    // Reanudar el esquema top set + back-off si se estaba usando
+    if (mine.any((s) => s.technique == 'backoff')) _topBackoff[exId] = true;
     final backoff = _topBackoff[exId] ?? false;
     for (int k = 1; k <= item.sets; k++) {
       final kind = backoff && k > 1 ? SetKind.backoff : SetKind.work;
       final ww = kind == SetKind.backoff ? spec.round(w * 0.9, mode: RoundMode.down) : w;
-      out.add(_PlannedSet(k, kind, _logged['$exId#$k']?.weight ?? ww, _logged['$exId#$k']?.reps ?? reps));
+      final done = _logged['$exId#$k'];
+      out.add(_PlannedSet(k, done != null ? SetKindX.parse(done.technique) : kind, done?.weight ?? ww, done?.reps ?? reps));
     }
     out.sort((a, b) => _order(a.slot).compareTo(_order(b.slot)));
     return out;
@@ -272,7 +284,30 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_error != null) return Scaffold(appBar: AppBar(), body: Center(child: Text(_error!)));
+    if (_error != null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 8),
+              const Text('Puede pasar si regeneraste o borraste el programa con esta sesión a medias.',
+                  textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textMuted)),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: () async {
+                  await ref.read(sessionRepoProvider).deleteSession(widget.sessionId);
+                  if (context.mounted) context.go('/');
+                },
+                child: const Text('Descartar esta sesión'),
+              ),
+            ]),
+          ),
+        ),
+      );
+    }
     final routine = _routine!;
     final item = routine.workout[_index];
     final ex = _catalog[_exIdAt(_index)];
@@ -656,14 +691,15 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   void _addWarmups(Exercise ex, MachineSpec spec) {
     final plan = _plan[ex.id]!;
     final top = plan.firstWhere((p) => p.kind != SetKind.warmup, orElse: () => plan.first).weight;
-    final existing = plan.where((p) => p.slot < 0).length;
+    final warm = plan.where((p) => p.slot < 0).map((p) => p.slot).toList();
+    // Número nuevo = el menor existente − 1 (nunca reutiliza uno vivo, aunque se haya quitado otro)
+    final next = (warm.isEmpty ? 0 : warm.reduce(math.min)) - 1;
     setState(() {
-      if (existing == 0) {
+      if (warm.isEmpty) {
         plan.insert(0, _PlannedSet(-2, SetKind.warmup, spec.round(top * 0.75, mode: RoundMode.down), 4));
         plan.insert(0, _PlannedSet(-1, SetKind.warmup, spec.round(top * 0.5, mode: RoundMode.down), 8));
       } else {
-        final slot = -(existing + 1);
-        plan.insert(existing, _PlannedSet(slot, SetKind.warmup, spec.round(top * 0.85, mode: RoundMode.down), 2));
+        plan.insert(warm.length, _PlannedSet(next, SetKind.warmup, spec.round(top * 0.85, mode: RoundMode.down), 2));
       }
     });
   }
@@ -671,7 +707,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   void _addDrop(Exercise ex, MachineSpec spec) {
     final plan = _plan[ex.id]!;
     final last = plan.last;
-    final slot = 101 + plan.where((p) => p.slot > 100).length;
+    final drops = plan.where((p) => p.slot > 100).map((p) => p.slot);
+    final slot = (drops.isEmpty ? 100 : drops.reduce(math.max)) + 1;
     setState(() => plan.add(_PlannedSet(slot, SetKind.drop, spec.round(last.weight * 0.75, mode: RoundMode.down),
         math.max(6, last.reps))));
   }
@@ -848,7 +885,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       return;
     }
     final current = _catalog[_exIdAt(_index)];
-    final opts = _catalog.values.where((e) => e.usableWith(types)).toList()
+    final opts = _catalog.values.where((e) => e.usableWith(types) && !_inRoutine.contains(e.id)).toList()
       ..sort((a, b) {
         final g = current == null ? '' : groupOf(current);
         return (groupOf(a) == g ? 0 : 1).compareTo(groupOf(b) == g ? 0 : 1);
@@ -870,7 +907,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       ),
     );
     if (pick != true) return;
-    setState(() => _swaps[_index] = opts.first.id);
+    await _setSwap(_index, opts.first.id);
     await _ensureRx(_index);
   }
 
@@ -880,11 +917,21 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
+  Future<void> _setSwap(int index, String exId) async {
+    setState(() => _swaps[index] = exId);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('$_swapsPrefix${_session!.id}', [for (final e in _swaps.entries) '${e.key}=${e.value}']);
+  }
+
+  /// Ejercicios ya presentes en la rutina (no se ofrecen como sustitutos:
+  /// compartirían series y plan).
+  Set<String> get _inRoutine => {for (int i = 0; i < _routine!.workout.length; i++) _exIdAt(i)};
+
   Future<void> _swap(Exercise current) async {
     final types = availableMachineTypes(_machines);
     final group = groupOf(current);
     final opts = _catalog.values
-        .where((e) => e.id != current.id && groupOf(e) == group && (types == null || e.usableWith(types)))
+        .where((e) => !_inRoutine.contains(e.id) && groupOf(e) == group && (types == null || e.usableWith(types)))
         .toList()
       ..sort((a, b) => (a.pattern == current.pattern ? 0 : 1).compareTo(b.pattern == current.pattern ? 0 : 1));
     final pick = await showModalBottomSheet<Exercise>(
@@ -903,7 +950,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       ),
     );
     if (pick == null) return;
-    setState(() => _swaps[_index] = pick.id);
+    await _setSwap(_index, pick.id);
     await _ensureRx(_index);
   }
 

@@ -443,11 +443,6 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
     );
   }
 
-  Widget _tag(String t, Color c) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(color: c.withOpacity(0.18), borderRadius: BorderRadius.circular(6)),
-        child: Text(t, style: TextStyle(fontSize: 10, color: c)),
-      );
 
   Widget _honestCard() => const Card(
         color: AppTheme.surfaceMid,

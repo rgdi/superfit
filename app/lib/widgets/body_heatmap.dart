@@ -4,7 +4,6 @@
 // músculos activos. Cada grupo puede representar varios músculos de SuperFit
 // (p. ej. CHEST = pectoral clavicular + esternal): su color es la mezcla.
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'anatomy_data.dart';
 

@@ -111,7 +111,7 @@ class SessionRepo {
         streak = 1;
         continue;
       }
-      final diff = day!.difference(d).inDays;
+      final diff = day.difference(d).inDays;
       if (diff == 1) {
         streak++;
         day = d;

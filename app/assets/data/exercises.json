@@ -314,7 +314,7 @@
     "default_rest_seconds": 120,
     "rpe_target": 8,
     "contraindications": [
-      "shoulder_impingement_severe",
+      "shoulder_impingement",
       "cervical_pain"
     ],
     "tempo": "3-1-2-0",
@@ -357,7 +357,7 @@
     "default_rest_seconds": 60,
     "rpe_target": 8,
     "contraindications": [
-      "shoulder_impingement"
+      "shoulder_impingement_severe"
     ],
     "tempo": "2-1-2-1",
     "source_research": "Schoenfeld 2020"
@@ -878,7 +878,7 @@
     "default_rest_seconds": 60,
     "rpe_target": 8,
     "contraindications": [
-      "lower_back_pain"
+      "lower_back_pain_severe"
     ],
     "tempo": "2-1-2-1",
     "source_research": "Schoenfeld 2020",
@@ -1062,7 +1062,7 @@
     "default_rest_seconds": 60,
     "rpe_target": 8,
     "contraindications": [
-      "shoulder_impingement"
+      "shoulder_impingement_severe"
     ],
     "tempo": "2-1-2-1",
     "source_research": "Schoenfeld 2020",
@@ -1225,7 +1225,7 @@
     "default_rest_seconds": 60,
     "rpe_target": 8,
     "contraindications": [
-      "lower_back_pain"
+      "lower_back_pain_severe"
     ],
     "tempo": "2-0-2-0",
     "source_research": "NSCA 2021"

@@ -17,6 +17,7 @@ import '../progress/progress_screen.dart';
 import '../routines/routines_screen.dart';
 import '../settings/settings_screen.dart';
 import 'program_today_card.dart';
+import '../workout/session_starter.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -66,8 +67,8 @@ class _HomeTab extends ConsumerWidget {
     final sessionRepo = ref.read(sessionRepoProvider);
     final sessions = await sessionRepo.recentSessions(limit: 60);
     final active = await sessionRepo.activeSession();
-    final cutoff = DateTime.now().subtract(const Duration(days: 35));
-    final sets = (await ref.read(setRepoProvider).allCompleted()).where((s) => s.performedAt.isAfter(cutoff)).toList();
+    // Historial completo: los récords se comparan con TODO lo que has hecho
+    final sets = await ref.read(setRepoProvider).allCompleted();
     RoutineRecommendation? fallback;
     if (ref.read(programProvider) == null) {
       fallback = await RoutineRecommender(CyclePlanner(await cat.plan(), ref.read(userSettingsProvider)), sessionRepo)
@@ -155,10 +156,7 @@ class _HomeTab extends ConsumerWidget {
   Widget _fallbackRow(BuildContext context, WidgetRef ref, Routine r) => Padding(
         padding: const EdgeInsets.only(top: 12),
         child: TextButton(
-          onPressed: () async {
-            final s = await ref.read(sessionRepoProvider).startSession(r.id);
-            if (context.mounted) context.push('/workout/${s.id}');
-          },
+          onPressed: () => startAndOpenSession(context, ref, r.id),
           child: Text('O empieza ya con ${r.nameEs}  →'),
         ),
       );
@@ -174,8 +172,8 @@ class _HomeTab extends ConsumerWidget {
         .map((s) => DateTime(s.startedAt.year, s.startedAt.month, s.startedAt.day))
         .toSet();
     const letters = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-    final weekAgo = now.subtract(const Duration(days: 7));
-    final week = d.sets.where((s) => s.performedAt.isAfter(weekAgo) && !s.isWarmup).toList();
+    // Misma semana para todo (lunes a domingo), como los puntos de los días
+    final week = d.sets.where((s) => !s.performedAt.isBefore(monday) && !s.isWarmup).toList();
     final volume = week.fold<double>(0, (a, s) => a + s.weight * s.reps);
     // Récords 30 días
     final best = <String, double>{};

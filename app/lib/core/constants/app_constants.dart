@@ -1,7 +1,7 @@
 // Constantes globales de SuperFit
 class AppConstants {
   static const String appName = 'SuperFit';
-  static const String appVersion = '1.5.0';
+  static const String appVersion = '1.6.0';
   static const String dbName = 'superfit.db';
   static const int dbVersion = 2;
 

@@ -20,7 +20,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
       body: FutureBuilder<Exercise?>(
         future: ref.read(catalogRepoProvider).exerciseById(exerciseId),
         builder: (context, snap) {
-          if (!snap.hasData) {
+          if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
           final ex = snap.data;

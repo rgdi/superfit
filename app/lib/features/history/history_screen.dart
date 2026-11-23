@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/names.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
@@ -58,7 +59,7 @@ class HistoryScreen extends ConsumerWidget {
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(r?.nameEs ?? s.routineId, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            Text(r?.nameEs ?? (s.routineId.startsWith('gen_') ? 'Sesión de un programa anterior' : Names.exercise(s.routineId)), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                             const SizedBox(height: 2),
                             Text('${s.totalSets ?? 0} series · ${s.duration?.inMinutes ?? 0} min',
                                 style: const TextStyle(fontSize: 13, color: AppTheme.textMuted)),

@@ -4,7 +4,6 @@
 // - Hulin 2014 (ACWR y lesión)
 // - Zourdos 2016 (RPE-based load)
 // - Helms 2014 (Volume landmarks: MEV/MAV/MRV)
-import '../../data/models/exercise.dart';
 import '../../data/models/set_log.dart';
 // use minimal interface for ACWR
 

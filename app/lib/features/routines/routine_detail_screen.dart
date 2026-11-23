@@ -4,6 +4,7 @@ import '../../core/names.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
+import '../workout/session_starter.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/routine.dart';
 
@@ -19,7 +20,7 @@ class RoutineDetailScreen extends ConsumerWidget {
       body: FutureBuilder<Routine?>(
         future: ref.read(catalogRepoProvider).routineById(routineId),
         builder: (context, snap) {
-          if (!snap.hasData) {
+          if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
           final r = snap.data;
@@ -77,10 +78,7 @@ class RoutineDetailScreen extends ConsumerWidget {
               ],
               const SizedBox(height: 24),
               FilledButton.icon(
-                onPressed: () async {
-                  final session = await ref.read(sessionRepoProvider).startSession(r.id);
-                  if (context.mounted) context.push('/workout/${session.id}');
-                },
+                onPressed: () => startAndOpenSession(context, ref, r.id),
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('EMPEZAR ESTA RUTINA'),
               ),
