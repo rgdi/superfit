@@ -1,5 +1,6 @@
 // ExerciseDetailScreen: detalle de un ejercicio con músculos resaltados
 import 'package:flutter/material.dart';
+import '../../core/names.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
@@ -33,7 +34,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${ex.category == 'compound' ? 'Compuesto' : 'Aislamiento'} · ${ex.pattern.replaceAll('_', ' ')}',
+                '${ex.category == 'compound' ? 'Compuesto' : 'Aislamiento'} · ${Names.pattern(ex.pattern)}',
                 style: const TextStyle(color: Colors.white60),
               ),
               const SizedBox(height: 16),
@@ -85,12 +86,12 @@ class ExerciseDetailScreen extends ConsumerWidget {
               runSpacing: 6,
               children: [
                 ...ex.primaryMuscles.map((m) => Chip(
-                  label: Text(m.replaceAll('_', ' ')),
+                  label: Text(Names.muscle(m)),
                   backgroundColor: AppTheme.primary.withOpacity(0.2),
                   labelStyle: const TextStyle(color: AppTheme.primary, fontSize: 11),
                 )),
                 ...ex.secondaryMuscles.map((m) => Chip(
-                  label: Text(m.replaceAll('_', ' ')),
+                  label: Text(Names.muscle(m)),
                   backgroundColor: AppTheme.surfaceLight,
                   labelStyle: const TextStyle(color: Colors.white60, fontSize: 11),
                 )),
@@ -206,7 +207,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(ex.contraindications.join(', ').replaceAll('_', ' ')),
+            Text(ex.contraindications.map(Names.contraindication).join(', ')),
           ],
         ),
       ),

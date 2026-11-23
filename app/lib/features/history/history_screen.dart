@@ -34,24 +34,39 @@ class HistoryScreen extends ConsumerWidget {
             future: ref.read(catalogRepoProvider).routines(),
             builder: (context, rSnap) {
               final routines = {for (final r in (rSnap.data ?? [])) r.id: r};
-              return ListView.builder(
-                padding: const EdgeInsets.all(8),
+              const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(AppTheme.gutter, 8, AppTheme.gutter, 24),
                 itemCount: snap.data!.length,
+                separatorBuilder: (_, __) => const Divider(),
                 itemBuilder: (_, i) {
                   final s = snap.data![i];
                   final r = routines[s.routineId];
-                  return Card(
-                    color: AppTheme.surfaceMid,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    child: ListTile(
-                      onTap: () => context.push('/history/${s.id}'),
-                      leading: const Icon(Icons.fitness_center, color: AppTheme.primary),
-                      title: Text(r?.nameEs ?? s.routineId),
-                      subtitle: Text(
-                        '${_fmt(s.startedAt)} · ${s.duration?.inMinutes ?? 0}min · RPE ${s.perceivedExertion ?? "—"}\n${s.totalSets ?? 0} series · ${(s.totalVolume ?? 0).toStringAsFixed(0)} vol',
-                      ),
-                      isThreeLine: true,
-                      trailing: const Icon(Icons.chevron_right),
+                  final vol = s.totalVolume ?? 0;
+                  return InkWell(
+                    onTap: () => context.push('/history/${s.id}'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Row(children: [
+                        SizedBox(
+                          width: 48,
+                          child: Column(children: [
+                            Text('${s.startedAt.day}', style: AppTheme.number.copyWith(fontSize: 22, fontWeight: FontWeight.w700)),
+                            Text(months[s.startedAt.month - 1], style: const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
+                          ]),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(r?.nameEs ?? s.routineId, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text('${s.totalSets ?? 0} series · ${s.duration?.inMinutes ?? 0} min',
+                                style: const TextStyle(fontSize: 13, color: AppTheme.textMuted)),
+                          ]),
+                        ),
+                        Text(vol >= 1000 ? '${(vol / 1000).toStringAsFixed(1)} t' : '${vol.toStringAsFixed(0)} kg',
+                            style: const TextStyle(fontSize: 14, color: AppTheme.textMuted)),
+                      ]),
                     ),
                   );
                 },
@@ -63,5 +78,4 @@ class HistoryScreen extends ConsumerWidget {
     );
   }
 
-  String _fmt(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 }

@@ -342,7 +342,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               shadowColor: Colors.transparent,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
             ),
-            child: Text(_step < 3 ? 'Siguiente →' : 'Empezar 💪'),
+            child: Text(_step < 3 ? 'Siguiente' : 'Empezar'),
           ),
         ),
       ],

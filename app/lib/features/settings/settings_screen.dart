@@ -47,7 +47,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.psychology, color: AppTheme.primary),
-            title: const Text('Mi IA'),
+            title: const Text('Tu modelo'),
             subtitle: const Text('Lo que ha aprendido de tus series (100 % en el móvil)'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/ai'),
@@ -120,7 +120,7 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           const _SectionHeader('Acerca de'),
           const ListTile(
-            title: Text('SuperFit v1.4.0'),
+            title: Text('SuperFit v1.5.0'),
             subtitle: Text('100% offline · sin tracking'),
           ),
           ListTile(

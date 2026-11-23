@@ -8,41 +8,30 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'anatomy_data.dart';
 
-const Color kBodyBase = Color(0xFF2E2E35);
+const Color kBodyBase = Color(0xFF26262A);
 // El viewBox original es 0..200 en vertical; algunas piezas (pies) se salen un poco.
 const double _kTop = 2, _kViewH = 210;
-const Color _nonMuscle = Color(0xFF3A3A42);
+const Color _nonMuscle = Color(0xFF1C1C1F);
 
-/// Color de calor: gris (0) → azul → verde (≈1) → naranja → rojo (≥2)
+/// Escala de un solo tono: gris (nada) → lima (en objetivo); coral solo si te pasas.
 Color heatColor(double v, {Color base = kBodyBase}) {
   if (v <= 0.02) return base;
-  const stops = [
-    (0.0, Color(0xFF2B4C7E)),
-    (0.5, Color(0xFF1FA4B8)),
-    (1.0, Color(0xFF3DDC84)),
-    (1.5, Color(0xFFFFB020)),
-    (2.0, Color(0xFFFF4D4D)),
-  ];
-  final x = v.clamp(0.0, 2.0);
-  for (int i = 1; i < stops.length; i++) {
-    if (x <= stops[i].$1) {
-      final t = (x - stops[i - 1].$1) / (stops[i].$1 - stops[i - 1].$1);
-      return Color.lerp(stops[i - 1].$2, stops[i].$2, t)!;
-    }
-  }
-  return stops.last.$2;
+  const signal = Color(0xFFB8F34A);
+  if (v <= 1.0) return Color.lerp(const Color(0xFF3A3A40), signal, v.clamp(0.0, 1.0))!;
+  if (v <= 1.5) return signal;
+  return Color.lerp(signal, const Color(0xFFF26D5B), ((v - 1.5) / 0.5).clamp(0.0, 1.0))!;
 }
 
-/// Color de recuperación: rojo (0) → ámbar → verde (1)
+/// Recuperación: coral (fatigado) → gris → lima (listo).
 Color recoveryColor(double r) => r < 0.5
-    ? Color.lerp(const Color(0xFFFF4D4D), const Color(0xFFFFB020), r / 0.5)!
-    : Color.lerp(const Color(0xFFFFB020), const Color(0xFF3DDC84), (r - 0.5) / 0.5)!;
+    ? Color.lerp(const Color(0xFFF26D5B), const Color(0xFF5A5A62), r / 0.5)!
+    : Color.lerp(const Color(0xFF5A5A62), const Color(0xFFB8F34A), (r - 0.5) / 0.5)!;
 
 /// Colores para un ejercicio: principales intensos, secundarios suaves.
 Map<String, Color> exerciseMuscleColors(Iterable<String> primary, Iterable<String> secondary,
-        {Color color = const Color(0xFFFF5A5F)}) =>
+        {Color color = const Color(0xFFF4F4F5)}) =>
     {
-      for (final m in secondary) m: Color.lerp(kBodyBase, color, 0.45)!,
+      for (final m in secondary) m: Color.lerp(kBodyBase, color, 0.35)!,
       for (final m in primary) m: color,
     };
 
@@ -211,15 +200,7 @@ class _AnatomyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final sx = size.width / 100, sy = size.height / _kViewH, dy = size.height * _kTop / _kViewH;
-    final bounds = Offset.zero & size;
 
-    // Sombra suave bajo la figura
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(size.width / 2, size.height * 0.985), width: size.width * 0.55, height: size.height * 0.02),
-      Paint()
-        ..color = Colors.black.withOpacity(0.35)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-    );
 
     for (final part in parts) {
       final active = _partColor(part);
@@ -228,68 +209,18 @@ class _AnatomyPainter extends CustomPainter {
       final color = active == null ? base : Color.lerp(base, active, appear)!;
       for (final poly in part.polygons) {
         final path = smoothPolygon(poly, sx, sy, dy: dy);
-        final r = path.getBounds();
-        // Brillo exterior en músculos activos
-        if (active != null && appear > 0.5) {
-          canvas.drawPath(
-            path,
-            Paint()
-              ..color = active.withOpacity(0.35 * appear + (isSel ? 0.3 * pulse : 0))
-              ..maskFilter = MaskFilter.blur(BlurStyle.normal, isSel ? 6 + 4 * pulse : 4),
-          );
-        }
-        // Relleno con volumen: luz arriba-izquierda, sombra abajo
-        canvas.drawPath(
-          path,
-          Paint()
-            ..shader = ui.Gradient.radial(
-              Offset(r.left + r.width * 0.38, r.top + r.height * 0.3),
-              math.max(r.width, r.height) * 0.9,
-              [Color.lerp(color, Colors.white, active == null ? 0.06 : 0.28)!, color, Color.lerp(color, Colors.black, 0.35)!],
-              const [0.0, 0.55, 1.0],
-            ),
-        );
-        // Fibras sutiles en músculos (líneas paralelas al eje largo)
-        if (part.muscles.isNotEmpty) {
-          canvas.save();
-          canvas.clipPath(path);
-          final fiber = Paint()
-            ..color = Colors.black.withOpacity(0.10)
-            ..strokeWidth = 0.6;
-          final vertical = r.height >= r.width;
-          for (double t = 0.15; t < 1; t += 0.17) {
-            if (vertical) {
-              final x = r.left + r.width * t;
-              canvas.drawLine(Offset(x, r.top), Offset(x + r.width * 0.08, r.bottom), fiber);
-            } else {
-              final y = r.top + r.height * t;
-              canvas.drawLine(Offset(r.left, y), Offset(r.right, y + r.height * 0.08), fiber);
-            }
-          }
-          canvas.restore();
-        }
+        // Relleno plano
+        canvas.drawPath(path, Paint()..color = color);
         // Contorno
         canvas.drawPath(
           path,
           Paint()
-            ..color = isSel ? Colors.white.withOpacity(0.6 + 0.4 * pulse) : Colors.black.withOpacity(0.55)
+            ..color = isSel ? Colors.white.withOpacity(0.6 + 0.4 * pulse) : const Color(0xFF0B0B0C)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = isSel ? 1.8 : 0.9,
+            ..strokeWidth = isSel ? 1.8 : 1.2,
         );
       }
     }
-    // Viñeta sutil
-    canvas.drawRect(
-      bounds,
-      Paint()
-        ..blendMode = BlendMode.srcATop
-        ..shader = ui.Gradient.linear(
-          Offset(0, 0),
-          Offset(0, size.height),
-          [Colors.white.withOpacity(0.04), Colors.transparent, Colors.black.withOpacity(0.10)],
-          const [0.0, 0.5, 1.0],
-        ),
-    );
   }
 
   @override

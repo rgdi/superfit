@@ -1,5 +1,6 @@
 // SessionDetailScreen: detalle de una sesión con todos sus sets
 import 'package:flutter/material.dart';
+import '../../core/names.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
@@ -59,7 +60,7 @@ class SessionDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   for (final entry in byExercise.entries) ...[
                     Text(
-                      entry.key.replaceAll('_', ' ').toUpperCase(),
+                      Names.exercise(entry.key),
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 4),

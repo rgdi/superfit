@@ -1,5 +1,6 @@
 // Hero card para la rutina del día — más visual
 import 'package:flutter/material.dart';
+import '../core/names.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/routine.dart';
@@ -51,7 +52,7 @@ class HeroRoutineCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    isDeload ? '🛌 DELOAD' : '🔥 HOY',
+                    isDeload ? 'DESCARGA' : 'HOY',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w800,
@@ -108,7 +109,7 @@ class HeroRoutineCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    w.exerciseId.replaceAll('_', ' '),
+                    Names.exercise(w.exerciseId),
                     style: const TextStyle(
                       color: Colors.black,
                       fontSize: 10,

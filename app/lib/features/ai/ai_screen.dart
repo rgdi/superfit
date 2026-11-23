@@ -19,7 +19,7 @@ class AiScreen extends ConsumerWidget {
     final machines = ref.watch(gymMachinesProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mi IA'),
+        title: const Text('Tu modelo'),
         actions: [
           IconButton(
             tooltip: 'Reentrenar',
@@ -63,36 +63,15 @@ class AiScreen extends ConsumerWidget {
         : ins.observations < 150
             ? ('Conociéndote', 'Ya ajusta pesos en los ejercicios que más repites.')
             : ('Te conoce', 'Ajusta pesos y predice reps en casi todo tu programa.');
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: LinearGradient(
-          colors: [AppTheme.primary.withOpacity(0.35), Colors.deepPurple.withOpacity(0.25)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Row(children: [
-        const Text('🤖', style: TextStyle(fontSize: 44))
-            .animate(onPlay: (c) => c.repeat(reverse: true))
-            .moveY(begin: -3, end: 3, duration: 1600.ms, curve: Curves.easeInOut),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(level.$1, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 2),
-            Row(children: [
-              NumberCounter(
-                value: ins.observations,
-                style: const TextStyle(fontWeight: FontWeight.w800, color: AppTheme.primary),
-              ),
-              const Text(' series aprendidas', style: TextStyle(color: Colors.white70)),
-            ]),
-            const SizedBox(height: 4),
-            Text(level.$2, style: const TextStyle(fontSize: 12, color: Colors.white70)),
-          ]),
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('${ins.observations}', style: AppTheme.number.copyWith(fontSize: 52, fontWeight: FontWeight.w700, height: 1)),
+        const Text('series aprendidas', style: TextStyle(fontSize: 15, color: AppTheme.textMuted)),
+        const SizedBox(height: 16),
+        Text(level.$1, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 4),
+        Text(level.$2, style: const TextStyle(fontSize: 14, color: AppTheme.textMuted, height: 1.45)),
       ]),
     );
   }
@@ -112,14 +91,14 @@ class AiScreen extends ConsumerWidget {
             style: const TextStyle(fontSize: 13),
           ),
           const SizedBox(height: 12),
-          _bar('IA', ins.maeModel!, ins.maeBaseline!, AppTheme.primary),
+          _bar('Modelo', ins.maeModel!, ins.maeBaseline!, Colors.white),
           const SizedBox(height: 6),
-          _bar('Fórmula', ins.maeBaseline!, ins.maeBaseline!, Colors.white38),
+          _bar('Fórmula', ins.maeBaseline!, ins.maeBaseline!, AppTheme.surfaceHigher),
           if (ins.maeModel! >= ins.maeBaseline!)
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text('De momento no mejora a la fórmula: con más datos debería. Mientras, el peso lo deciden las reglas.',
-                  style: TextStyle(fontSize: 12, color: Colors.amberAccent)),
+                  style: TextStyle(fontSize: 13, color: AppTheme.textMuted)),
             ),
         ],
       ],
@@ -223,7 +202,7 @@ class AiScreen extends ConsumerWidget {
   Widget _privacy() => const Padding(
         padding: EdgeInsets.symmetric(vertical: 16),
         child: Text(
-          '🔒 El modelo se entrena en tu móvil con tus series y nunca sale de él. Es un modelo estadístico '
+          'El modelo se entrena en tu móvil con tus series y nunca sale de él. Es un modelo estadístico '
           '(filtro de Kalman + regresión con valores típicos de partida), no un chatbot: no inventa, '
           'solo extrapola lo que has hecho. Siempre puedes cambiar el peso a mano.',
           style: TextStyle(fontSize: 11, color: Colors.white54),
@@ -257,7 +236,7 @@ class _Training extends StatelessWidget {
   const _Training();
   @override
   Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [
-        const Text('🤖', style: TextStyle(fontSize: 56))
+        const Icon(Icons.memory, size: 48, color: AppTheme.textMuted)
             .animate(onPlay: (c) => c.repeat())
             .rotate(begin: -0.03, end: 0.03, duration: 400.ms)
             .then()

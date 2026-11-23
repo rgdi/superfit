@@ -21,10 +21,8 @@ extension SetKindX on SetKind {
         SetKind.drop => 'Drop set',
       };
   Color get color => switch (this) {
-        SetKind.warmup => Colors.lightBlueAccent,
-        SetKind.work => AppTheme.primary,
-        SetKind.backoff => Colors.amberAccent,
-        SetKind.drop => Colors.pinkAccent,
+        SetKind.work => Colors.white,
+        _ => AppTheme.textMuted,
       };
   static SetKind parse(String? t) => switch (t) {
         'warmup' => SetKind.warmup,
@@ -76,7 +74,6 @@ class _SetRowState extends State<SetRow> {
   late int _reps = widget.reps;
   late int? _rpe = widget.rpe;
   late bool _done = widget.completed;
-  int _bump = 0; // dispara la animación al completar
 
   void _emit() => widget.onChanged(_w, _reps, _rpe, _done);
 
@@ -142,13 +139,9 @@ class _SetRowState extends State<SetRow> {
       curve: Curves.easeOutCubic,
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
-        color: _done ? c.withOpacity(0.12) : AppTheme.surfaceMid,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _done ? c.withOpacity(0.7) : (widget.highlight ? c.withOpacity(0.5) : Colors.transparent),
-          width: widget.highlight && !_done ? 1.5 : 1,
-        ),
-        boxShadow: _done ? [BoxShadow(color: c.withOpacity(0.25), blurRadius: 16)] : const [],
+        color: AppTheme.surfaceMid,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        border: Border.all(color: widget.highlight && !_done ? AppTheme.surfaceHigher : Colors.transparent),
       ),
       padding: const EdgeInsets.fromLTRB(10, 8, 6, 4),
       child: Column(
@@ -161,11 +154,12 @@ class _SetRowState extends State<SetRow> {
                 height: 38,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: _done ? c : AppTheme.surfaceLight,
+                  color: _done ? Colors.white : Colors.transparent,
                   shape: BoxShape.circle,
+                  border: Border.all(color: _done ? Colors.white : AppTheme.surfaceHigher),
                 ),
                 child: Text(widget.badge,
-                    style: TextStyle(fontWeight: FontWeight.w800, color: _done ? Colors.black : c)),
+                    style: TextStyle(fontWeight: FontWeight.w700, color: _done ? Colors.black : c)),
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -208,14 +202,13 @@ class _SetRowState extends State<SetRow> {
                   child: Icon(
                     _done ? Icons.check_circle : Icons.radio_button_unchecked,
                     key: ValueKey(_done),
-                    color: _done ? c : Colors.white54,
+                    color: _done ? Colors.white : AppTheme.textFaint,
                   ),
                 ),
                 onPressed: () {
                   HapticFeedback.mediumImpact();
                   setState(() {
                     _done = !_done;
-                    if (_done) _bump++;
                   });
                   _emit();
                 },
@@ -224,20 +217,14 @@ class _SetRowState extends State<SetRow> {
           ),
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: c.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(widget.kind.label, style: TextStyle(fontSize: 10, color: c)),
-              ),
+              if (widget.kind != SetKind.work)
+                Text(widget.kind.label, style: const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
               if (widget.aiHint != null) ...[
-                const SizedBox(width: 6),
+                if (widget.kind != SetKind.work) const SizedBox(width: 8),
                 Flexible(
-                  child: Text('🤖 ${widget.aiHint}',
+                  child: Text(widget.aiHint!,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 11, color: Colors.white60)),
+                      style: const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
                 ),
               ],
               const Spacer(),
@@ -246,7 +233,7 @@ class _SetRowState extends State<SetRow> {
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: _rpe == null ? Colors.white38 : AppTheme.rpeColor(_rpe!))),
+                        color: _rpe == null ? AppTheme.textFaint : Colors.white)),
                 SizedBox(
                   width: 120,
                   child: Slider(
@@ -272,11 +259,7 @@ class _SetRowState extends State<SetRow> {
         ],
       ),
     );
-    return card
-        .animate(key: ValueKey(_bump), autoPlay: _bump > 0)
-        .scaleXY(begin: 1, end: 1.04, duration: 140.ms, curve: Curves.easeOut)
-        .then()
-        .scaleXY(begin: 1.04, end: 1, duration: 260.ms, curve: Curves.elasticOut);
+    return card;
   }
 
   Widget _stepper({
@@ -307,7 +290,7 @@ class _SetRowState extends State<SetRow> {
                       key: ValueKey(value),
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                 ),
-                Text(onTap != null ? '$label ▾' : label,
+                Text(label,
                     style: const TextStyle(fontSize: 10, color: Colors.white54)),
               ],
             ),

@@ -406,7 +406,7 @@ class ProgramGenerator {
       restSeconds: rest,
       tempo: ex.tempo,
       notesEs: _caution(ex)
-          ? 'Con tu molestia: usa un rango sin dolor. Si molesta, cámbialo con ⇄.'
+          ? 'Con tu molestia: usa un rango sin dolor. Si molesta, cámbialo por otro.'
           : null,
       notesEn: _caution(ex) ? 'Pain-free range only; swap it if it hurts.' : null,
     );

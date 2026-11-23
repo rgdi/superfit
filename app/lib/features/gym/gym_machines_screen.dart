@@ -47,45 +47,52 @@ class GymMachinesScreen extends ConsumerWidget {
       body: FutureBuilder<List<Machine>>(
         future: ref.read(catalogRepoProvider).machines(),
         builder: (context, snap) {
-          final types = {for (final m in snap.data ?? <Machine>[]) m.id: m.nameEs};
           if (machines.isEmpty) return _empty(context, ref);
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+            padding: const EdgeInsets.fromLTRB(AppTheme.gutter, 8, AppTheme.gutter, 96),
             children: [
               Text(
-                '${machines.length} máquinas · los programas y pesos se adaptan a ellas',
+                '${machines.length} máquinas',
                 style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
               const SizedBox(height: 8),
-              for (final m in machines)
-                Card(
-                  color: AppTheme.surfaceMid,
-                  child: ListTile(
-                    onTap: () => Navigator.of(context)
-                        .push(MaterialPageRoute(builder: (_) => MachineHistoryScreen(machine: m))),
-                    leading: const Icon(Icons.fitness_center, color: AppTheme.primary),
-                    title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text(
-                      [
-                        m.typeIds.map((t) => types[t] ?? t).join(' · '),
-                        '${_fmt(m.minWeight)}–${_fmt(m.maxWeight)} kg, saltos de ${_fmt(m.increment)}',
-                        if (m.setupNotes.isNotEmpty) '⚙ ${m.setupNotes}',
-                        if (m.codes.isNotEmpty) '🔗 QR/NFC vinculado',
-                      ].join('\n'),
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    isThreeLine: true,
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (v) => v == 'edit'
-                          ? _openEditor(context, m)
-                          : ref.read(gymMachinesProvider.notifier).remove(m.id),
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Editar')),
-                        PopupMenuItem(value: 'delete', child: Text('Eliminar')),
-                      ],
-                    ),
+              for (final m in machines) ...[
+                InkWell(
+                  onTap: () => Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (_) => MachineHistoryScreen(machine: m))),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Row(children: [
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(m.name.replaceFirst('Technogym ', ''),
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 2),
+                          Text(
+                            [
+                              if (m.brand.isNotEmpty) m.brand,
+                              '${_fmt(m.minWeight)}–${_fmt(m.maxWeight)} kg',
+                              if (m.setupNotes.isNotEmpty) m.setupNotes,
+                            ].join(' · '),
+                            style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
+                          ),
+                        ]),
+                      ),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_horiz, color: AppTheme.textFaint),
+                        onSelected: (v) => v == 'edit'
+                            ? _openEditor(context, m)
+                            : ref.read(gymMachinesProvider.notifier).remove(m.id),
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(value: 'edit', child: Text('Editar')),
+                          PopupMenuItem(value: 'delete', child: Text('Eliminar')),
+                        ],
+                      ),
+                    ]),
                   ),
                 ),
+                const Divider(),
+              ],
             ],
           );
         },
@@ -353,7 +360,7 @@ class _MachineEditScreenState extends ConsumerState<MachineEditScreen> {
                     child: Text('¿Qué ejercicios permite?', style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                   if (!_typesTouched && _types.isNotEmpty)
-                    const Text('detectado ✓', style: TextStyle(color: AppTheme.primary, fontSize: 12)),
+                    const Text('detectado', style: TextStyle(color: AppTheme.primary, fontSize: 12)),
                 ],
               ),
               const SizedBox(height: 4),

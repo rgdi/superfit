@@ -1,6 +1,7 @@
 // Main entry point + theme + routing
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
@@ -30,6 +31,7 @@ import 'features/muscles/muscle_map_screen.dart';
 
 void main() {
   LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(['Inter (tipografía)'], await rootBundle.loadString('assets/fonts/OFL.txt'));
     yield const LicenseEntryWithLineBreaks(['react-body-highlighter (siluetas anatómicas)'], _rbhLicense);
     yield const LicenseEntryWithLineBreaks(['Free Exercise DB (fotos de ejercicios)'],
         'Unlicense — dominio público. https://github.com/yuhonas/free-exercise-db');
@@ -38,13 +40,14 @@ void main() {
 }
 
 class SuperFitApp extends ConsumerWidget {
-  const SuperFitApp({super.key});
+  final String initialLocation;
+  const SuperFitApp({super.key, this.initialLocation = '/'});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final onboardingAsync = ref.watch(onboardingDoneProvider);
     final router = GoRouter(
-      initialLocation: '/',
+      initialLocation: initialLocation,
       redirect: (context, state) {
         if (onboardingAsync.isLoading) return null;
         final done = onboardingAsync.valueOrNull ?? false;

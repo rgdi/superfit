@@ -100,8 +100,8 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
       Center(
         child: SegmentedButton<bool>(
           segments: const [
-            ButtonSegment(value: false, label: Text('🔥 Volumen')),
-            ButtonSegment(value: true, label: Text('🔋 Recuperación')),
+            ButtonSegment(value: false, label: Text('Volumen')),
+            ButtonSegment(value: true, label: Text('Recuperación')),
           ],
           selected: {_recoveryMode},
           onSelectionChanged: (s) => setState(() => _recoveryMode = s.first),
@@ -127,9 +127,9 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
       ),
       const SizedBox(height: 16),
       Row(children: [
-        _pill('$inTarget', 'en objetivo', const Color(0xFF3DDC84)),
-        _pill('$low', 'por debajo', const Color(0xFF1FA4B8)),
-        _pill('$none', 'sin trabajar', Colors.white38),
+        _pill('$inTarget', 'en objetivo', Colors.white),
+        _pill('$low', 'por debajo', Colors.white),
+        _pill('$none', 'sin trabajar', Colors.white),
       ]),
       const SizedBox(height: 12),
       const Text('Lo que más necesita trabajo (7 días)', style: TextStyle(fontWeight: FontWeight.w700)),
@@ -191,7 +191,7 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Column(children: [
-              Text(n, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: c)),
+              Text(n, style: AppTheme.number.copyWith(fontSize: 24, fontWeight: FontWeight.w700, color: c)),
               Text(label, style: const TextStyle(fontSize: 11, color: Colors.white60)),
             ]),
           ),
@@ -271,7 +271,7 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
           ],
           if (best != null) ...[
             const Divider(height: 20),
-            Text('💡 Para trabajarlo: ${best.nameEs}', style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text('Para trabajarlo: ${best.nameEs}', style: const TextStyle(fontWeight: FontWeight.w600)),
             if (machineForExercise(best, machines) != null)
               Text('en tu ${machineForExercise(best, machines)!.name}',
                   style: const TextStyle(fontSize: 12, color: Colors.white60)),
@@ -344,9 +344,9 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
       ),
       const SizedBox(height: 12),
       Row(children: [
-        _pill('${plan.picks.length}', 'máquinas', AppTheme.primary),
-        _pill('~${plan.minutes}', 'min (2 series)', AppTheme.primary),
-        _pill('${plan.coverage.values.where((v) => v >= 1).length}/${plan.coverage.length}', 'músculos', AppTheme.primary),
+        _pill('${plan.picks.length}', 'máquinas', Colors.white),
+        _pill('~${plan.minutes}', 'min (2 series)', Colors.white),
+        _pill('${plan.coverage.values.where((v) => v >= 1).length}/${plan.coverage.length}', 'músculos', Colors.white),
       ]),
       const SizedBox(height: 8),
       BodyHeatmap(key: ValueKey('cov$_essential${plan.picks.length}'), colors: covColors, height: 260),
@@ -416,20 +416,23 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               InkWell(
                 onTap: () => context.push('/exercises/${p.exercise.id}'),
-                child: Text('${p.exercise.nameEs}  ▸', style: const TextStyle(fontWeight: FontWeight.w700)),
+                child: Text(p.exercise.nameEs, style: const TextStyle(fontWeight: FontWeight.w700)),
               ),
               if (m != null) Text(m.name, style: const TextStyle(fontSize: 12, color: Colors.white60)),
               const SizedBox(height: 6),
-              Wrap(spacing: 4, runSpacing: 4, children: [
-                for (final c in p.covers) _tag(names[c] ?? c, heatColor(1)),
-                for (final c in p.helps) _tag(names[c] ?? c, heatColor(0.45)),
-              ]),
+              Text(
+                [
+                  ...p.covers.map((c) => names[c] ?? c),
+                  if (p.helps.isNotEmpty) '+ ${p.helps.map((c) => (names[c] ?? c).toLowerCase()).join(', ')}',
+                ].join(', '),
+                style: const TextStyle(fontSize: 13, color: AppTheme.textMuted, height: 1.4),
+              ),
               const SizedBox(height: 6),
-              Text(p.why, style: const TextStyle(fontSize: 12, color: Colors.white70)),
+
               if (p.tip != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text('💡 ${p.tip}', style: const TextStyle(fontSize: 12, color: AppTheme.primary)),
+                  child: Text(p.tip!, style: const TextStyle(fontSize: 13, color: Colors.white, height: 1.4)),
                 ),
             ]),
           ),

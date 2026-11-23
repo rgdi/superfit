@@ -1,24 +1,22 @@
+// Inicio — minimalista: lo de hoy, la semana en una línea y accesos en lista.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/routine.dart';
+import '../../data/models/set_log.dart';
 import '../../data/models/workout_session.dart';
+import '../../domain/ai/performance_model.dart';
 import '../../domain/usecases/cycle_planner.dart';
 import '../../domain/usecases/routine_recommender.dart';
-import '../routines/routines_screen.dart';
-import '../../widgets/visual_widgets.dart';
-import '../../widgets/hero_routine_card.dart';
-import '../../domain/usecases/advanced_analytics.dart';
+import '../gym/machine_history_screen.dart';
+import '../gym/scan_machine.dart';
 import '../history/history_screen.dart';
 import '../progress/progress_screen.dart';
+import '../routines/routines_screen.dart';
 import '../settings/settings_screen.dart';
 import 'program_today_card.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import '../gym/scan_machine.dart';
-import '../gym/machine_history_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -31,299 +29,239 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      const _HomeTab(),
-      const RoutinesScreen(),
-      const HistoryScreen(),
-      const ProgressScreen(),
-      const SettingsScreen(),
-    ];
+    const pages = [_HomeTab(), RoutinesScreen(), HistoryScreen(), ProgressScreen(), SettingsScreen()];
     return Scaffold(
       body: pages[_index],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
-        onTap: (i) => setState(() => _index = i),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Hoy'),
-          BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: 'Rutinas'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Historial'),
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Progreso'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Ajustes'),
-        ],
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.border))),
+        child: NavigationBar(
+          selectedIndex: _index,
+          onDestinationSelected: (i) => setState(() => _index = i),
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.today_outlined), selectedIcon: Icon(Icons.today), label: 'Hoy'),
+            NavigationDestination(icon: Icon(Icons.view_agenda_outlined), selectedIcon: Icon(Icons.view_agenda), label: 'Rutinas'),
+            NavigationDestination(icon: Icon(Icons.history), label: 'Historial'),
+            NavigationDestination(icon: Icon(Icons.show_chart), label: 'Progreso'),
+            NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Perfil'),
+          ],
+        ),
       ),
     );
   }
 }
 
+class _HomeData {
+  final List<WorkoutSession> sessions;
+  final WorkoutSession? active;
+  final List<SetLog> sets;
+  final RoutineRecommendation? fallback;
+  const _HomeData(this.sessions, this.active, this.sets, this.fallback);
+}
+
 class _HomeTab extends ConsumerWidget {
   const _HomeTab();
 
+  Future<_HomeData> _load(WidgetRef ref) async {
+    final cat = ref.read(catalogRepoProvider);
+    final sessionRepo = ref.read(sessionRepoProvider);
+    final sessions = await sessionRepo.recentSessions(limit: 60);
+    final active = await sessionRepo.activeSession();
+    final cutoff = DateTime.now().subtract(const Duration(days: 35));
+    final sets = (await ref.read(setRepoProvider).allCompleted()).where((s) => s.performedAt.isAfter(cutoff)).toList();
+    RoutineRecommendation? fallback;
+    if (ref.read(programProvider) == null) {
+      fallback = await RoutineRecommender(CyclePlanner(await cat.plan(), ref.read(userSettingsProvider)), sessionRepo)
+          .recommendForToday(await cat.routines());
+    }
+    return _HomeData(sessions, active, sets, fallback);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final catalogRepo = ref.watch(catalogRepoProvider);
-    final sessionRepo = ref.watch(sessionRepoProvider);
-    final settings = ref.watch(userSettingsProvider);
-    final locale = settings.locale;
-
-    return FutureBuilder<RoutineRecommendation>(
-      future: () async {
-        final routines = await catalogRepo.routines();
-        final plan = await catalogRepo.plan();
-        final planner = CyclePlanner(plan, settings);
-        final recommender = RoutineRecommender(planner, sessionRepo);
-        return recommender.recommendForToday(routines);
-      }(),
+    final program = ref.watch(programProvider);
+    return FutureBuilder<_HomeData>(
+      future: _load(ref),
       builder: (context, snap) {
+        final d = snap.data;
         return SafeArea(
+          bottom: false,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(AppTheme.gutter, 16, AppTheme.gutter, 32),
             children: [
-              const Text('Hola 👋', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
-              Text(
-                _greeting(),
-                style: const TextStyle(color: Colors.white60),
-              ),
-              const SizedBox(height: 24),
-              _streakCard(ref),
-              const SizedBox(height: 16),
-              if (ref.watch(programProvider) != null)
-                ProgramTodayCard(program: ref.watch(programProvider)!)
-              else ...[
-                const CreateProgramCta(),
-                const SizedBox(height: 12),
-                _todayCard(context, ref, snap, locale),
-              ],
-              const SizedBox(height: 12),
-              const _AiCard(),
-              const SizedBox(height: 16),
-              _lastSessionCard(ref),
-              const SizedBox(height: 16),
-              _volumeChart(ref),
-              const SizedBox(height: 16),
-              _quickActions(context, ref),
-            ].animate(interval: 50.ms).fadeIn(duration: 350.ms).slideY(begin: 0.08, curve: Curves.easeOutCubic),
-          ),
-        );
-      },
-    );
-  }
-
-  String _greeting() {
-    final h = DateTime.now().hour;
-    if (h < 12) return 'Buenos días. Listo para entrenar?';
-    if (h < 20) return 'Buenas tardes. A por el entreno.';
-    return 'Buenas noches. Mañana más.';
-  }
-
-  Widget _streakCard(WidgetRef ref) {
-    return FutureBuilder<int>(
-      future: ref.read(sessionRepoProvider).currentStreakDays(),
-      builder: (context, snap) {
-        final streak = snap.data ?? 0;
-        return Card(
-          color: AppTheme.surfaceMid,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Text('🔥', style: TextStyle(fontSize: 40)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$streak días',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-                      ),
-                      const Text('racha de entrenamiento',
-                          style: TextStyle(color: Colors.white60, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-
-  Widget _fatigueCard(WidgetRef ref) {
-    return FutureBuilder(
-      future: AdvancedAnalytics(ref.read(setRepoProvider)).detectFatigue(),
-      builder: (context, snap) {
-        if (!snap.hasData || snap.data!.totalSets7d == 0) {
-          return const SizedBox.shrink();
-        }
-        return FatigueRing(
-          fatigue: snap.data!.fatigueIndex,
-          recommendation: snap.data!.recommendation,
-        );
-      },
-    );
-  }
-  Widget _todayCard(BuildContext context, WidgetRef ref, AsyncSnapshot<RoutineRecommendation> snap, String locale) {
-    if (snap.connectionState == ConnectionState.waiting) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
-    final rec = snap.data;
-    if (rec == null || rec.routine == null) {
-      return Card(
-        color: AppTheme.surfaceMid,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              const Icon(Icons.bedtime, size: 48, color: Colors.white60),
-              const SizedBox(height: 12),
-              Text(
-                rec?.reason ?? 'No hay rutina planificada hoy.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
-              ),
+              _header(context, ref),
+              const SizedBox(height: 28),
+              if (d?.active != null) ...[_activeRow(context, d!), const SizedBox(height: 20)],
+              if (program != null) ProgramTodayCard(program: program) else const CreateProgramCta(),
+              if (program == null && d?.fallback?.routine != null) _fallbackRow(context, ref, d!.fallback!.routine!),
+              const SizedBox(height: 36),
+              if (d != null) _week(ref, d),
+              const SizedBox(height: 28),
+              const Divider(),
+              _row(context, 'Músculos', 'Volumen y recuperación de la semana', () => context.push('/muscles')),
+              const Divider(),
+              _aiRow(context, ref),
+              const Divider(),
+              _row(context, 'Máquinas', 'Las tuyas, con su historial', () => context.push('/settings/machines')),
+              const Divider(),
+              _row(context, 'Ejercicios', 'Cómo se hace cada uno', () => context.push('/exercises')),
+              const Divider(),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  Widget _header(BuildContext context, WidgetRef ref) {
+    final now = DateTime.now();
+    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre',
+      'octubre', 'noviembre', 'diciembre'];
+    return Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+      Expanded(
+        child: Text('${days[now.weekday - 1]}\n${now.day} de ${months[now.month - 1]}',
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: -0.9, height: 1.15)),
+      ),
+      IconButton(
+        tooltip: 'Escanear máquina',
+        icon: const Icon(Icons.qr_code_scanner, color: AppTheme.textMuted),
+        onPressed: () => _scanMachine(context, ref),
+      ),
+    ]);
+  }
+
+  Widget _activeRow(BuildContext context, _HomeData d) {
+    final s = d.active!;
+    final done = d.sets.where((x) => x.sessionId == s.id && !x.isWarmup).length;
+    return InkWell(
+      onTap: () => context.push('/workout/${s.id}'),
+      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppTheme.surfaceHigher),
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        ),
+        child: Row(children: [
+          Container(width: 7, height: 7, decoration: const BoxDecoration(color: AppTheme.signal, shape: BoxShape.circle)),
+          const SizedBox(width: 12),
+          Expanded(child: Text('Sesión en curso · $done series', style: const TextStyle(fontWeight: FontWeight.w600))),
+          const Text('Continuar', style: TextStyle(fontWeight: FontWeight.w700)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _fallbackRow(BuildContext context, WidgetRef ref, Routine r) => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: TextButton(
+          onPressed: () async {
+            final s = await ref.read(sessionRepoProvider).startSession(r.id);
+            if (context.mounted) context.push('/workout/${s.id}');
+          },
+          child: Text('O empieza ya con ${r.nameEs}  →'),
         ),
       );
+
+  /// La semana en una línea: 7 días + 3 cifras. Sin tarjetas.
+  Widget _week(WidgetRef ref, _HomeData d) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+    final target = ref.read(trainingProfileProvider).daysPerWeek;
+    final trained = d.sessions
+        .where((s) => !s.startedAt.isBefore(monday))
+        .map((s) => DateTime(s.startedAt.year, s.startedAt.month, s.startedAt.day))
+        .toSet();
+    const letters = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    final weekAgo = now.subtract(const Duration(days: 7));
+    final week = d.sets.where((s) => s.performedAt.isAfter(weekAgo) && !s.isWarmup).toList();
+    final volume = week.fold<double>(0, (a, s) => a + s.weight * s.reps);
+    // Récords 30 días
+    final best = <String, double>{};
+    var prs = 0;
+    final monthAgo = now.subtract(const Duration(days: 30));
+    final sorted = d.sets.where((s) => !s.isWarmup).toList()..sort((a, b) => a.performedAt.compareTo(b.performedAt));
+    for (final s in sorted) {
+      final e = PerformanceModel.e1rm(s.weight, s.reps, s.rpe);
+      final b = best[s.exerciseId];
+      if (b != null && e > b * 1.005 && s.performedAt.isAfter(monthAgo)) prs++;
+      if (b == null || e > b) best[s.exerciseId] = e;
     }
-    return HeroRoutineCard(
-      routine: rec.routine!,
-      reason: rec.reason ?? '',
-      locale: locale,
-      onView: () => context.push('/routines/${rec.routine!.id}'),
-      onStart: () => _startRoutine(context, ref, rec.routine!),
-    );
-  }
 
-  Future<void> _startRoutine(BuildContext context, WidgetRef ref, Routine r) async {
-    final session = await ref.read(sessionRepoProvider).startSession(r.id);
-    if (context.mounted) context.push('/workout/${session.id}');
-  }
-
-  Widget _lastSessionCard(WidgetRef ref) {
-    return FutureBuilder<WorkoutSession?>(
-      future: ref.read(sessionRepoProvider).activeSession().then((s) async {
-        if (s != null) return s;
-        final r = await ref.read(sessionRepoProvider).recentSessions(limit: 1);
-        return r.isEmpty ? null : r.first;
-      }),
-      builder: (context, snap) {
-        if (!snap.hasData || snap.data == null) return const SizedBox.shrink();
-        final s = snap.data!;
-        if (s.isActive) {
-          return Card(
-            color: AppTheme.primary.withOpacity(0.15),
-            child: InkWell(
-              onTap: () => context.push('/workout/${s.id}'),
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.fiber_manual_record, color: Colors.red, size: 16),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'Sesión activa',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right),
-                  ],
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(children: [
+        const Text('Esta semana', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        const Spacer(),
+        Text('${trained.length} de $target', style: const TextStyle(fontSize: 15, color: AppTheme.textMuted)),
+      ]),
+      const SizedBox(height: 16),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        for (int i = 0; i < 7; i++)
+          Builder(builder: (_) {
+            final day = monday.add(Duration(days: i));
+            final done = trained.contains(day);
+            final isToday = day == today;
+            return Column(children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: done ? AppTheme.primary : Colors.transparent,
+                  border: Border.all(color: done ? AppTheme.primary : (isToday ? AppTheme.textMuted : AppTheme.surfaceHigher)),
                 ),
+                child: Text(letters[i],
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: done ? Colors.black : (isToday ? Colors.white : AppTheme.textFaint))),
               ),
-            ),
-          );
-        }
-        return Card(
-          color: AppTheme.surfaceMid,
-          child: ListTile(
-            leading: const Icon(Icons.check_circle, color: AppTheme.primary),
-            title: Text('Última: ${ref.read(programProvider)?.routines.where((r) => r.id == s.routineId).firstOrNull?.nameEs ?? s.routineId.replaceAll('_', ' ')}'),
-            subtitle: Text(
-              '${s.startedAt.day}/${s.startedAt.month} · ${s.totalSets ?? 0} series · RPE ${s.perceivedExertion ?? "—"}',
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/history/${s.id}'),
-          ),
-        );
-      },
-    );
+            ]);
+          }),
+      ]),
+      const SizedBox(height: 28),
+      Row(children: [
+        _figure(volume >= 1000 ? (volume / 1000).toStringAsFixed(1) : volume.toStringAsFixed(0),
+            volume >= 1000 ? 'toneladas' : 'kg movidos'),
+        _figure('${week.length}', 'series'),
+        _figure('$prs', prs == 1 ? 'récord' : 'récords', sub: '30 días'),
+      ]),
+    ]);
   }
 
-  Widget _volumeChart(WidgetRef ref) {
-    return FutureBuilder<List<WorkoutSession>>(
-      future: ref.read(sessionRepoProvider).recentSessions(limit: 20),
-      builder: (context, snap) {
-        if (!snap.hasData || snap.data!.isEmpty) return const SizedBox.shrink();
-        final sessions = snap.data!.take(8).toList().reversed.toList();
-        return Card(
-          color: AppTheme.surfaceMid,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Volumen por sesión (kg · reps)',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 100,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: const FlGridData(show: false),
-                      titlesData: const FlTitlesData(show: false),
-                      borderData: FlBorderData(show: false),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: [
-                            for (int i = 0; i < sessions.length; i++)
-                              FlSpot(i.toDouble(), sessions[i].totalVolume ?? 0),
-                          ],
-                          isCurved: true,
-                          color: AppTheme.primary,
-                          barWidth: 3,
-                          dotData: const FlDotData(show: true),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: AppTheme.primary.withOpacity(0.2),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+  Widget _figure(String value, String label, {String? sub}) => Expanded(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(value, style: AppTheme.number.copyWith(fontSize: 30, fontWeight: FontWeight.w700)),
+          Text(sub == null ? label : '$label · $sub', style: const TextStyle(fontSize: 13, color: AppTheme.textMuted)),
+        ]),
+      );
+
+  Widget _row(BuildContext context, String title, String sub, VoidCallback onTap) => InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(sub, style: const TextStyle(fontSize: 13, color: AppTheme.textMuted)),
+              ]),
             ),
-          ),
-        );
-      },
-    );
+            const Icon(Icons.arrow_forward, size: 18, color: AppTheme.textFaint),
+          ]),
+        ),
+      );
+
+  Widget _aiRow(BuildContext context, WidgetRef ref) {
+    final ins = ref.watch(performanceModelProvider).valueOrNull?.insights;
+    final n = ins?.observations ?? 0;
+    final sub = n == 0 ? 'Aprende de tus series desde la primera sesión' : 'Ha aprendido de $n series';
+    return _row(context, 'Tu modelo', sub, () => context.push('/ai'));
   }
 
-  Widget _quickActions(BuildContext context, WidgetRef ref) {
-    return Row(
-      children: [
-        Expanded(child: _actionCard(Icons.qr_code_scanner, 'Escanear', () => _scanMachine(context, ref))),
-        const SizedBox(width: 12),
-        Expanded(child: _actionCard(Icons.accessibility_new, 'Músculos', () => context.push('/muscles'))),
-        const SizedBox(width: 12),
-        Expanded(child: _actionCard(Icons.camera_alt, 'Fotos', () => context.push('/progress/photos'))),
-        const SizedBox(width: 12),
-        Expanded(child: _actionCard(Icons.menu_book, 'Ejercicios', () => context.push('/exercises'))),
-      ],
-    );
-  }
-
-  /// Escanear una máquina desde Inicio: si hay sesión activa, salta a ese
-  /// ejercicio; si no, abre la ficha de la máquina (ajustes, pesos).
   Future<void> _scanMachine(BuildContext context, WidgetRef ref) async {
     final m = await scanAndResolveMachine(context, ref);
     if (m == null || !context.mounted) return;
@@ -334,55 +272,5 @@ class _HomeTab extends ConsumerWidget {
     } else {
       Navigator.of(context).push(MaterialPageRoute(builder: (_) => MachineHistoryScreen(machine: m)));
     }
-  }
-
-  Widget _actionCard(IconData icon, String label, VoidCallback onTap) {
-    return Card(
-      color: AppTheme.surfaceMid,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Icon(icon, color: AppTheme.primary, size: 28),
-              const SizedBox(height: 8),
-              FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-/// Resumen de la IA local en Inicio.
-class _AiCard extends ConsumerWidget {
-  const _AiCard();
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final m = ref.watch(performanceModelProvider);
-    final ins = m.valueOrNull?.insights;
-    final text = m.isLoading
-        ? 'Entrenando con tus series…'
-        : ins == null || ins.observations == 0
-            ? 'Aprenderá de ti desde tu primera sesión.'
-            : ins.maeModel != null
-                ? '${ins.observations} series aprendidas · acierta tus reps ±${ins.maeModel!.toStringAsFixed(1)}'
-                : '${ins.observations} series aprendidas · afinando…';
-    return Card(
-      color: AppTheme.surfaceMid,
-      child: ListTile(
-        leading: const Text('🤖', style: TextStyle(fontSize: 28))
-            .animate(onPlay: (c) => c.repeat(reverse: true))
-            .scaleXY(begin: 0.95, end: 1.05, duration: 1400.ms, curve: Curves.easeInOut),
-        title: const Text('Mi IA', style: TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(text, style: const TextStyle(fontSize: 12)),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => context.push('/ai'),
-      ),
-    );
   }
 }

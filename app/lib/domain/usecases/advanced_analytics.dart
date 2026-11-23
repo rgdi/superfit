@@ -102,13 +102,13 @@ class AdvancedAnalytics {
     final shouldReduce = fatigue > 0.4 && fatigue <= 0.7;
     String rec;
     if (shouldDeload) {
-      rec = '🚨 FATIGA ALTA — deload inmediato. Reduce 50% volumen, RPE 6-7, 1 semana.';
+      rec = 'Fatiga alta: deload inmediato. Reduce 50% volumen, RPE 6-7, 1 semana.';
     } else if (shouldReduce) {
-      rec = '⚠️ Fatiga elevada — mantén pesos, reduce 1-2 series por ejercicio esta semana.';
+      rec = 'Fatiga elevada: mantén pesos, reduce 1-2 series por ejercicio esta semana.';
     } else if (fatigue < 0.2) {
-      rec = '✅ Buena recuperación — puedes progresar pesos esta semana.';
+      rec = 'Buena recuperación: puedes progresar pesos esta semana.';
     } else {
-      rec = '👍 Fatiga normal — sigue el plan.';
+      rec = 'Fatiga normal: sigue el plan.';
     }
     final totalSets = sets.length;
     final totalVol = sets.fold<double>(0, (a, b) => a + b.volume).round();

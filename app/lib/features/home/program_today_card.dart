@@ -10,6 +10,7 @@ import '../../data/models/routine.dart';
 import '../../domain/engine/load_engine.dart';
 import '../../domain/engine/program_coach.dart';
 import '../../domain/ai/ai_service.dart' show kReadinessPrefix;
+import '../../widgets/exercise_animation.dart';
 
 class ProgramTodayCard extends ConsumerWidget {
   final GeneratedProgram program;
@@ -53,64 +54,70 @@ class ProgramTodayCard extends ConsumerWidget {
     return FutureBuilder<CoachAdvice>(
       future: _advice(ref),
       builder: (context, snap) {
-        if (!snap.hasData) {
-          return const Card(child: Padding(padding: EdgeInsets.all(24), child: LinearProgressIndicator()));
-        }
+        if (!snap.hasData) return const SizedBox(height: 380);
         final a = snap.data!;
         final r = a.routine!;
-        return Card(
-          color: AppTheme.surfaceMid,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Icon(a.deload ? Icons.spa : Icons.bolt, color: AppTheme.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(a.headline, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-                  ),
-                ]),
-                const SizedBox(height: 6),
-                Text('${program.splitName} · ${r.workout.length} ejercicios · ~${r.estimatedMinutes} min',
-                    style: const TextStyle(color: Colors.white60, fontSize: 12)),
-                const SizedBox(height: 8),
-                for (final n in a.notes)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Text('• $n', style: const TextStyle(fontSize: 13)),
-                  ),
-                const SizedBox(height: 12),
-                Wrap(spacing: 8, runSpacing: 8, alignment: WrapAlignment.spaceBetween, children: [
-                  OutlinedButton(
-                    onPressed: () => context.push('/program'),
-                    child: const Text('Programa'),
-                  ),
-                  FilledButton.icon(
-                    onPressed: () => _start(context, ref, r),
-                    icon: const Icon(Icons.play_arrow),
-                    label: Text(a.suggestRest ? 'Entrenar igualmente' : 'Empezar'),
-                  ),
-                ]),
-              ],
+        final coach = ProgramCoach(program);
+        final meta = [
+          '${r.workout.length} ejercicios',
+          '${r.estimatedMinutes} min',
+          a.deload ? 'descarga' : 'semana ${a.week} de ${program.mesocycleWeeks}',
+        ].join(' · ');
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          GestureDetector(
+            onTap: () => context.push('/routines/${r.id}'),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radius),
+              child: AspectRatio(
+                aspectRatio: 16 / 10,
+                child: Image.asset(exercisePhoto(r.workout.first.exerciseId, 0), fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(color: AppTheme.surfaceMid)),
+              ),
             ),
           ),
-        );
+          const SizedBox(height: 18),
+          Text(a.suggestRest ? 'Hoy toca descansar' : 'Hoy',
+              style: const TextStyle(fontSize: 14, color: AppTheme.textMuted)),
+          const SizedBox(height: 2),
+          Text(r.nameEs, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: -1.0)),
+          const SizedBox(height: 6),
+          Text(meta, style: const TextStyle(fontSize: 14, color: AppTheme.textMuted)),
+          if (!a.deload && !a.suggestRest) ...[
+            const SizedBox(height: 2),
+            Text('Esfuerzo objetivo RPE ${coach.rpeForWeek(a.week)}',
+                style: const TextStyle(fontSize: 14, color: AppTheme.textMuted)),
+          ],
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => _start(context, ref, r),
+              child: Text(a.suggestRest ? 'Entrenar igualmente' : 'Empezar'),
+            ),
+          ),
+        ]);
       },
     );
   }
 
   Future<void> _start(BuildContext context, WidgetRef ref, Routine r) async {
-    final readiness = await showDialog<Readiness>(
+    final readiness = await showModalBottomSheet<Readiness>(
       context: context,
-      builder: (_) => SimpleDialog(
-        title: const Text('¿Cómo llegas hoy?'),
-        children: [
-          _opt(context, Readiness.low, '😴', 'Cansado / dormí mal / agujetas', '1 serie menos y RPE −1'),
-          _opt(context, Readiness.normal, '🙂', 'Normal', 'Sesión según el plan'),
-          _opt(context, Readiness.high, '🔥', 'A tope', 'Según plan; si vas sobrado, el sistema sube peso'),
-        ],
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(AppTheme.gutter, 0, AppTheme.gutter, 12),
+              child: Text('¿Cómo llegas hoy?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: -0.4)),
+            ),
+            _opt(context, Readiness.low, 'Cansado', 'Una serie menos y algo menos de esfuerzo'),
+            const Divider(indent: AppTheme.gutter, endIndent: AppTheme.gutter),
+            _opt(context, Readiness.normal, 'Normal', 'La sesión tal cual'),
+            const Divider(indent: AppTheme.gutter, endIndent: AppTheme.gutter),
+            _opt(context, Readiness.high, 'Con energía', 'Si vas sobrado, subo el peso'),
+          ]),
+        ),
       ),
     );
     if (readiness == null) return;
@@ -120,18 +127,11 @@ class ProgramTodayCard extends ConsumerWidget {
     if (context.mounted) context.push('/workout/${session.id}');
   }
 
-  Widget _opt(BuildContext context, Readiness v, String emoji, String title, String sub) => SimpleDialogOption(
-        onPressed: () => Navigator.pop(context, v),
-        child: Row(children: [
-          Text(emoji, style: const TextStyle(fontSize: 28)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-              Text(sub, style: const TextStyle(color: Colors.white60, fontSize: 12)),
-            ]),
-          ),
-        ]),
+  Widget _opt(BuildContext context, Readiness v, String title, String sub) => ListTile(
+        onTap: () => Navigator.pop(context, v),
+        title: Text(title),
+        subtitle: Text(sub),
+        trailing: const Icon(Icons.arrow_forward, size: 18, color: AppTheme.textFaint),
       );
 }
 
@@ -139,14 +139,23 @@ class ProgramTodayCard extends ConsumerWidget {
 class CreateProgramCta extends StatelessWidget {
   const CreateProgramCta({super.key});
   @override
-  Widget build(BuildContext context) => Card(
-        color: AppTheme.primary.withOpacity(0.12),
-        child: ListTile(
-          leading: const Icon(Icons.auto_awesome, color: AppTheme.primary),
-          title: const Text('Crea tu programa a medida', style: TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: const Text('Con tus máquinas, tus días, tu tiempo y tus molestias.'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.push('/settings/profile'),
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radius),
+          child: AspectRatio(
+            aspectRatio: 16 / 10,
+            child: Image.asset(exercisePhoto('leg_press', 0), fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(color: AppTheme.surfaceMid)),
+          ),
         ),
-      );
+        const SizedBox(height: 18),
+        const Text('Tu programa', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: -1.0)),
+        const SizedBox(height: 6),
+        const Text('Con tus máquinas, tus días y tu tiempo.', style: TextStyle(fontSize: 14, color: AppTheme.textMuted)),
+        const SizedBox(height: 18),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(onPressed: () => context.push('/settings/profile'), child: const Text('Crear programa')),
+        ),
+      ]);
 }

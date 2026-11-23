@@ -1,7 +1,7 @@
 name: superfit
 description: "SuperFit — App de gimnasio 100% offline con adaptación inteligente. Basada en evidencia científica."
 publish_to: 'none'
-version: 1.4.0+5
+version: 1.5.0+6
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -54,11 +54,26 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.otf
+        - asset: assets/fonts/Inter-Medium.otf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.otf
+          weight: 700
+        - asset: assets/fonts/Inter-ExtraBold.otf
+          weight: 800
+        - asset: assets/fonts/Inter-Black.otf
+          weight: 900
   assets:
     - assets/data/
     - assets/data/routines/
     - assets/images/exercises/
     - assets/images/exercise_photos/
+    - assets/fonts/OFL.txt
     - assets/images/machines/
     - assets/images/muscles/
     - assets/svg/

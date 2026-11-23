@@ -234,7 +234,7 @@ void main() {
     await c.read(gymMachinesProvider.notifier).reload();
     await pump(t, MachineHistoryScreen(machine: c.read(gymMachinesProvider).single));
     expect(find.text('Press de pecho en máquina'), findsOneWidget);
-    expect(find.textContaining('1RM estimado por la IA'), findsOneWidget);
+    expect(find.textContaining('1RM estimado por el modelo'), findsOneWidget);
   });
 
   test('modelo entrenado con el historial falso conoce la máquina', () async {
@@ -260,7 +260,7 @@ void main() {
     await settle(t);
     expect(find.textContaining('Series esta semana'), findsOneWidget);
     // Modo recuperación
-    await t.tap(find.text('🔋 Recuperación'));
+    await t.tap(find.text('Recuperación'));
     await settle(t);
     expect(find.text('Listo'), findsOneWidget);
     // Pestaña de máquinas eficientes

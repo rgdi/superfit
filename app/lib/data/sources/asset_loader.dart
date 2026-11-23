@@ -6,6 +6,7 @@ import '../models/machine.dart';
 import '../models/muscle.dart';
 import '../models/routine.dart';
 import '../models/routine_plan.dart';
+import '../../core/names.dart';
 
 class AssetLoader {
   static const _exercises = 'assets/data/exercises.json';
@@ -25,7 +26,9 @@ class AssetLoader {
   static Future<List<Exercise>> loadExercises() async {
     final raw = await rootBundle.loadString(_exercises);
     final list = jsonDecode(raw) as List;
-    return list.map((e) => Exercise.fromJson(e as Map<String, dynamic>)).toList();
+    final out = list.map((e) => Exercise.fromJson(e as Map<String, dynamic>)).toList();
+    Names.exercises.addAll({for (final e in out) e.id: e.nameEs});
+    return out;
   }
 
   static Future<List<Machine>> loadMachines() async {
@@ -37,7 +40,9 @@ class AssetLoader {
   static Future<List<Muscle>> loadMuscles() async {
     final raw = await rootBundle.loadString(_muscles);
     final list = jsonDecode(raw) as List;
-    return list.map((e) => Muscle.fromJson(e as Map<String, dynamic>)).toList();
+    final out = list.map((e) => Muscle.fromJson(e as Map<String, dynamic>)).toList();
+    Names.muscles.addAll({for (final m in out) m.id: m.nameEs});
+    return out;
   }
 
   static Future<List<Routine>> loadRoutines() async {

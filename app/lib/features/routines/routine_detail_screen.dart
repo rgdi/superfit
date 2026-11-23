@@ -1,5 +1,6 @@
 // RoutineDetailScreen: detalle de una rutina
 import 'package:flutter/material.dart';
+import '../../core/names.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
@@ -54,7 +55,7 @@ class RoutineDetailScreen extends ConsumerWidget {
                 child: ListTile(
                   onTap: () => context.push('/exercises/${w.exerciseId}'),
                   title: Text(
-                    w.exerciseId.replaceAll('_', ' ').toUpperCase(),
+                    Names.exercise(w.exerciseId),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(

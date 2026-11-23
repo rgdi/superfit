@@ -35,7 +35,7 @@ void main() {
     await t.tap(find.text('Añadir 2'));
     await t.pumpAndSettle();
     expect(c.read(gymMachinesProvider), hasLength(2));
-    expect(find.text('Technogym Selection 700 Chest Press'), findsOneWidget);
+    expect(find.text('Selection 700 Chest Press'), findsOneWidget);
   });
 
   testWidgets('Editor de máquina detecta el tipo por el nombre', (t) async {
@@ -43,7 +43,7 @@ void main() {
     await _pump(t, const MachineEditScreen(), c);
     await t.enterText(find.byType(TextField).first, 'Technogym Selection 700 Leg Curl');
     await t.pumpAndSettle();
-    expect(find.text('detectado ✓'), findsOneWidget);
+    expect(find.text('detectado'), findsOneWidget);
     await t.ensureVisible(find.text('Guardar'));
     await t.pumpAndSettle();
     await t.tap(find.text('Guardar'));

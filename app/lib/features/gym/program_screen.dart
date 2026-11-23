@@ -40,8 +40,12 @@ class ProgramScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _generateCard(context, ref, snap.data!, program != null),
+              if (program == null) _generateCard(context, ref, snap.data!, false),
               if (program != null) ..._programView(context, program, byId),
+              if (program != null) ...[
+                const SizedBox(height: 24),
+                _generateCard(context, ref, snap.data!, true),
+              ],
             ],
           );
         },
@@ -130,7 +134,7 @@ class ProgramScreen extends ConsumerWidget {
       const SizedBox(height: 16),
       ExpansionTile(
         tilePadding: EdgeInsets.zero,
-        initiallyExpanded: true,
+        initiallyExpanded: false,
         title: const Text('Por qué este programa', style: TextStyle(fontWeight: FontWeight.w700)),
         children: [
           for (final r in p.rationale)

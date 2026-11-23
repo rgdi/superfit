@@ -2,6 +2,31 @@
 
 Todas las versiones siguen [SemVer](https://semver.org/lang/es/).
 
+## [1.5.0] - 23 nov 2026
+
+### Rediseño minimalista
+- Interfaz monocroma: negro, grises y blanco; botones blancos con texto negro. El color
+  solo aparece para comunicar datos (un único verde lima de progreso, coral solo si te pasas).
+- Tipografía **Inter** en toda la app, números con cifras tabulares.
+- Sin emojis, degradados, brillos ni confeti. Animaciones reducidas a lo necesario.
+- Inicio reescrito: la sesión de hoy con foto real y un solo botón, la semana en una línea
+  (7 días + volumen, series y récords) y accesos en lista.
+- Listas (Historial, Rutinas, Máquinas) como filas con separadores, sin cajas ni iconos repetidos.
+- Pantalla de entreno: una línea de datos en vez de chips; el peso del día en grande con un
+  único motivo (antes el texto de la regla y el del modelo se contradecían).
+- Mapa muscular plano, escala de un solo tono.
+- Barra de navegación nueva; "Mi IA" pasa a "Tu modelo".
+
+### Correcciones
+- Nombres internos en inglés ("chest press machine", "quadriceps", "squat") sustituidos por
+  sus nombres en español en todas las pantallas.
+- Error al salir de la pantalla de entreno mientras cargaba (actualizaba una pantalla cerrada).
+- Símbolos que la tipografía no tenía (▸ ▾ ⇄) y se veían como cuadros.
+
+### Herramientas
+- Capturas automáticas de 14 pantallas con datos de ejemplo:
+  `SHOTS_DIR=/ruta flutter test test/screenshots_test.dart`.
+
 ## [1.4.0] - 22 nov 2026
 
 ### Realismo

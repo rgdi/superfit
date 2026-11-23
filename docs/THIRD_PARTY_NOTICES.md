@@ -1,5 +1,9 @@
 # Recursos de terceros
 
+## Tipografía — Inter
+- Origen: https://github.com/rsms/inter · Copyright 2016-2023 The Inter Project Authors.
+- Licencia: **SIL Open Font License 1.1** (texto en `app/assets/fonts/OFL.txt`).
+
 ## Fotos de ejercicios — Free Exercise DB
 - Origen: https://github.com/yuhonas/free-exercise-db
 - Licencia: **Unlicense** (dominio público).

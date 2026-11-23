@@ -152,7 +152,7 @@ class _ExerciseAnimationState extends State<ExerciseAnimation> with SingleTicker
                         colors: exerciseMuscleColors(
                           ex.primaryMuscles,
                           ex.secondaryMuscles,
-                          color: Color.lerp(const Color(0xFFB03A3E), const Color(0xFFFF5A5F), effort)!,
+                          color: Color.lerp(const Color(0xFF8E8E96), const Color(0xFFF4F4F5), effort)!,
                         ),
                         showLabels: false,
                         frontOnly: exerciseIsFront(ex),
@@ -174,9 +174,9 @@ class _ExerciseAnimationState extends State<ExerciseAnimation> with SingleTicker
                           borderRadius: BorderRadius.circular(3),
                           child: LinearProgressIndicator(
                             value: _c.value,
-                            minHeight: 4,
+                            minHeight: 2,
                             backgroundColor: Colors.white24,
-                            color: AppTheme.primary,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -193,19 +193,17 @@ class _ExerciseAnimationState extends State<ExerciseAnimation> with SingleTicker
   }
 
   Widget _phaseChip(int phase) {
-    final (text, color) = switch (phase) {
-      0 => ('Posición inicial', Colors.white70),
-      1 => ('Movimiento ▸', AppTheme.primary),
-      2 => ('Posición final', Colors.white70),
-      _ => ('◂ Vuelta controlada', Colors.amberAccent),
+    final text = switch (phase) {
+      0 => 'Inicio',
+      1 => 'Movimiento',
+      2 => 'Final',
+      _ => 'Vuelta controlada',
     };
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
       child: Container(
         key: ValueKey(phase),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(8)),
-        child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+        child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
       ),
     );
   }

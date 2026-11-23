@@ -1,5 +1,6 @@
 // ProgressScreen: métricas + 1RM + galería accesos
 import 'package:flutter/material.dart';
+import '../../core/names.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
@@ -240,7 +241,7 @@ class ProgressScreen extends ConsumerWidget {
                           backgroundColor: AppTheme.surfaceLight,
                           child: Text('${i + 1}'),
                         ),
-                        title: Text(list[i].key.replaceAll('_', ' ')),
+                        title: Text(Names.exercise(list[i].key)),
                         trailing: Text('${list[i].value.toStringAsFixed(1)} kg',
                             style: const TextStyle(fontWeight: FontWeight.w700)),
                       ),

@@ -68,6 +68,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   final Map<int, String> _swaps = {};
   final Map<String, LoadPrescription> _rx = {};
   final Map<String, String?> _aiNote = {};
+  final Map<String, String> _override = {}; // motivo cuando el modelo corrige el peso
   final Map<String, List<_PlannedSet>> _plan = {};
   final Map<String, bool> _topBackoff = {};
   final Map<String, double> _bestE1rm = {};
@@ -116,6 +117,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       } catch (_) {
         _ai = null; // la sesión funciona sin IA
       }
+      if (!mounted) return;
       setState(() {
         _session = session;
         _routine = routine;
@@ -125,6 +127,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       final initial = _machines.where((m) => m.id == widget.initialMachineId).firstOrNull;
       if (initial != null && mounted) await _jumpToMachine(initial);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = '$e';
         _loading = false;
@@ -181,17 +184,19 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       if (aiW != null) {
         final bounded = spec.round(aiW.clamp(rx.weight * 0.9, rx.weight * 1.1), mode: RoundMode.down);
         if ((bounded - w).abs() > 1e-6) {
-          aiNote = 'IA (confianza ${st.confidence}): ajusta a ${fmtKg(bounded)} kg según tu forma actual.';
+          _override[exId] = bounded < w
+              ? 'Según el plan tocarían ${fmtKg(w)} kg, pero por tu rendimiento reciente mejor ${fmtKg(bounded)} kg.'
+              : 'Vas más fuerte de lo previsto: ${fmtKg(bounded)} kg en lugar de ${fmtKg(w)} kg.';
           w = bounded;
         } else {
-          aiNote = 'IA (confianza ${st.confidence}) coincide con el plan.';
+          aiNote = null;
         }
       }
     } else if (st != null && !st.usable) {
-      aiNote = 'IA aprendiendo este ejercicio (${st.observations} series).';
+      aiNote = null;
     }
     if (otherMachine) {
-      aiNote = 'Primera vez en ${machine.name}: cada máquina pesa distinto, calibramos con la 1ª serie.';
+      aiNote = 'Primera vez en esta máquina: la primera serie sirve para calibrar.';
       rx = LoadEngine.nextSession(
         history: const [],
         repMin: lo,
@@ -265,26 +270,20 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
               child: ex == null ? const Center(child: Text('Ejercicio no encontrado')) : _body(ex, item, routine),
             ),
           ),
-          // Récord
-          Positioned.fill(
-            child: IgnorePointer(child: ConfettiBurst(key: ValueKey(_prCount), trigger: _prCount > 0)),
-          ),
           if (_prText != null)
             Positioned(
               top: 12,
               left: 24,
               right: 24,
-              child: Card(
-                color: Colors.amber,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text('🏆 $_prText',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800)),
-                ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
+                child: Text(_prText!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
               )
                   .animate(key: ValueKey('pr$_prCount'))
-                  .slideY(begin: -1, duration: 400.ms, curve: Curves.elasticOut)
+                  .fadeIn(duration: 250.ms)
                   .then(delay: 2500.ms)
                   .fadeOut(duration: 400.ms),
             ),
@@ -366,7 +365,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
           if (ex.cuesEs.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text('💡 ${ex.cuesEs.join(' · ')}', style: const TextStyle(color: AppTheme.primary, fontSize: 12)),
+              child: Text(ex.cuesEs.join(' · '), style: const TextStyle(color: AppTheme.primary, fontSize: 12)),
             ),
           BodyHeatmap(colors: exerciseMuscleColors(ex.primaryMuscles, ex.secondaryMuscles), height: 260),
         ],
@@ -385,17 +384,17 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         for (int i = 0; i < children.length; i++)
-          children[i].animate().fadeIn(delay: (40 * i).ms, duration: 300.ms).slideY(begin: 0.08, curve: Curves.easeOut),
+          children[i].animate().fadeIn(delay: (25 * i).ms, duration: 220.ms),
       ],
     );
   }
 
   Widget _banner(IconData icon, String text) => Card(
-        color: AppTheme.secondary.withOpacity(0.12),
+        color: AppTheme.surfaceMid,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           child: Row(children: [
-            Icon(icon, color: AppTheme.secondary, size: 20),
+            Icon(icon, color: AppTheme.textMuted, size: 20),
             const SizedBox(width: 8),
             Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
           ]),
@@ -407,39 +406,36 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         children: [
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(ex.nameEs, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 8),
-              Wrap(spacing: 6, runSpacing: 6, children: [
-                _chip('${item.sets} × ${item.repsTarget}'),
-                _chip('RPE ${item.rpeTarget} (deja ${10 - item.rpeTarget})'),
-                _chip('Descanso ${item.restSeconds}s'),
-                _chip('Tempo ${item.tempo}'),
-              ]),
+              Text(ex.nameEs, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.6)),
+              const SizedBox(height: 4),
+              Text(
+                '${item.sets} series de ${item.repsTarget} · RPE ${item.rpeTarget} · '
+                'descanso ${item.restSeconds >= 60 ? '${(item.restSeconds / 60).toStringAsFixed(item.restSeconds % 60 == 0 ? 0 : 1)} min' : '${item.restSeconds} s'}',
+                style: const TextStyle(fontSize: 14, color: AppTheme.textMuted),
+              ),
             ]),
           ),
-          IconButton(tooltip: 'Cambiar ejercicio', icon: const Icon(Icons.swap_horiz), onPressed: () => _swap(ex)),
+          IconButton(
+              tooltip: 'Cambiar ejercicio',
+              icon: const Icon(Icons.swap_horiz, color: AppTheme.textMuted),
+              onPressed: () => _swap(ex)),
         ],
       );
 
-  Widget _chip(String label) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(color: AppTheme.surfaceLight, borderRadius: BorderRadius.circular(8)),
-        child: Text(label, style: const TextStyle(fontSize: 11, color: Colors.white70)),
-      );
 
   Widget _machineCard(Exercise ex) {
     final m = _machineFor(ex);
     if (m == null) {
       if (_machines.isEmpty) return const SizedBox.shrink();
       return _banner(Icons.help_outline,
-          'No tienes registrada una máquina para este ejercicio. Pulsa ⇄ para cambiarlo o escanea su QR.');
+          'No tienes registrada una máquina para este ejercicio. Cámbialo con el botón de arriba o escanea su QR.');
     }
     return Card(
       color: AppTheme.surfaceMid,
       child: ListTile(
         leading: const Icon(Icons.fitness_center, color: AppTheme.primary),
         title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(m.setupNotes.isEmpty ? 'Toca para guardar tu ajuste de asiento' : '⚙ ${m.setupNotes}'),
+        subtitle: Text(m.setupNotes.isEmpty ? 'Toca para guardar tu ajuste de asiento' : 'Ajuste: ${m.setupNotes}'),
         trailing: const Icon(Icons.edit, size: 18),
         onTap: () => _editSetup(m),
       ),
@@ -452,68 +448,44 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     if (rx == null || plan == null) {
       return const Card(child: Padding(padding: EdgeInsets.all(16), child: LinearProgressIndicator()));
     }
-    final color = switch (rx.action) {
-      LoadAction.increase => AppTheme.primary,
-      LoadAction.decrease => AppTheme.secondary,
-      LoadAction.calibrate => Colors.amber,
-      _ => Colors.white70,
-    };
-    final icon = switch (rx.action) {
-      LoadAction.increase => Icons.trending_up,
-      LoadAction.decrease => Icons.trending_down,
-      LoadAction.calibrate => Icons.tune,
-      LoadAction.maxedOut => Icons.vertical_align_top,
-      _ => Icons.trending_flat,
-    };
     final w = plan.firstWhere((p) => p.kind != SetKind.warmup, orElse: () => plan.first).weight;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(colors: [color.withOpacity(0.22), color.withOpacity(0.05)]),
-        border: Border.all(color: color.withOpacity(0.35)),
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Icon(icon, color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: NumberCounter(
-                value: w,
-                decimals: w == w.roundToDouble() ? 0 : 1,
-                suffix: ' kg × ${rx.targetReps}',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color),
-              ),
-            ),
-          ),
-          if (rx.e1rm != null)
-            Text('1RM est. ${rx.e1rm!.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white54, fontSize: 11)),
-        ]),
-        const SizedBox(height: 6),
-        Text(rx.reason, style: const TextStyle(fontSize: 13)),
-        if (_aiNote[ex.id] != null) ...[
-          const SizedBox(height: 6),
-          Text('🤖 ${_aiNote[ex.id]}', style: const TextStyle(fontSize: 12, color: Colors.white70)),
-        ],
-        if (item.rpeTarget <= 6)
-          const Padding(
-            padding: EdgeInsets.only(top: 4),
-            child: Text('Descarga: peso −10 %.', style: TextStyle(fontSize: 12, color: Colors.white60)),
-          ),
-        if (rx.plateau || rx.action == LoadAction.maxedOut)
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => _swap(ex),
-              icon: const Icon(Icons.swap_horiz),
-              label: const Text('Ver alternativas'),
-            ),
-          ),
+    final adjusted = _override.containsKey(ex.id);
+    final trend = adjusted ? 'Ajustado' : switch (rx.action) {
+      LoadAction.increase => 'Sube',
+      LoadAction.decrease => 'Baja',
+      LoadAction.calibrate => 'Calibrando',
+      LoadAction.maxedOut => 'Máximo de la máquina',
+      _ => 'Mismo peso',
+    };
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(trend, style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: !adjusted && rx.action == LoadAction.increase ? AppTheme.signal : AppTheme.textMuted)),
+      const SizedBox(height: 2),
+      Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+        Text(fmtKg(w), style: AppTheme.number.copyWith(fontSize: 44, fontWeight: FontWeight.w700)),
+        const Text(' kg', style: TextStyle(fontSize: 18, color: AppTheme.textMuted, fontWeight: FontWeight.w600)),
+        Text('  ×  ${rx.targetReps}', style: AppTheme.number.copyWith(fontSize: 28, fontWeight: FontWeight.w600, color: AppTheme.textMuted)),
       ]),
-    ).animate().shimmer(delay: 300.ms, duration: 1200.ms, color: color.withOpacity(0.25));
+      const SizedBox(height: 8),
+      Text(_override[ex.id] ?? rx.reason, style: const TextStyle(fontSize: 14, color: AppTheme.textMuted, height: 1.45)),
+      if (_aiNote[ex.id] != null) ...[
+        const SizedBox(height: 4),
+        Text(_aiNote[ex.id]!, style: const TextStyle(fontSize: 14, color: AppTheme.textMuted, height: 1.45)),
+      ],
+      if (item.rpeTarget <= 6)
+        const Padding(
+          padding: EdgeInsets.only(top: 4),
+          child: Text('Semana de descarga: peso un 10 % menor.', style: TextStyle(fontSize: 14, color: AppTheme.textMuted)),
+        ),
+      if (rx.plateau || rx.action == LoadAction.maxedOut)
+        TextButton(
+          style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: Colors.white),
+          onPressed: () => _swap(ex),
+          child: const Text('Ver alternativas →'),
+        ),
+    ]);
   }
 
   Widget _setsSection(Exercise ex, WorkoutItem item) {
@@ -749,7 +721,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       setState(() {
         _bestE1rm[ex.id] = e;
         _prCount++;
-        _prText = '¡Récord en ${ex.nameEs}! 1RM est. ${e.toStringAsFixed(1)} kg';
+        _prText = 'Récord personal en ${ex.nameEs}';
       });
     } else if (e > best) {
       _bestE1rm[ex.id] = e;
@@ -816,7 +788,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     }
     if (changed) {
       setState(() {});
-      _snack('${next > weight ? '⬆' : '⬇'} Siguiente serie a ${fmtKg(next)} kg ($why).');
+      _snack('Siguiente serie a ${fmtKg(next)} kg ($why).');
     }
   }
 
@@ -963,9 +935,9 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
           _stat('Series efectivas', done.length.toDouble(), ''),
           _stat('Volumen', volume, ' kg'),
           _stat('Récords', _prCount.toDouble(), ''),
-          if (ups > 0) Text('Subiste carga en $ups ejercicio(s) 💪').animate().fadeIn(delay: 900.ms),
+          if (ups > 0) Text('Subiste carga en $ups ejercicio(s).').animate().fadeIn(delay: 900.ms),
           const SizedBox(height: 8),
-          const Text('🤖 La IA ya está aprendiendo de esta sesión.', style: TextStyle(fontSize: 12, color: Colors.white60))
+          const Text('El modelo ya está aprendiendo de esta sesión.', style: TextStyle(fontSize: 12, color: Colors.white60))
               .animate()
               .fadeIn(delay: 1200.ms),
         ]),

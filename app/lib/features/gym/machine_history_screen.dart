@@ -71,7 +71,7 @@ class MachineHistoryScreen extends ConsumerWidget {
               if (machine.setupNotes.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
-                  child: Text('⚙ ${machine.setupNotes}', style: const TextStyle(color: Colors.white70)),
+                  child: Text('Ajuste: ${machine.setupNotes}', style: const TextStyle(color: Colors.white70)),
                 ),
               const SizedBox(height: 16),
               for (final (i, e) in byExercise.entries.indexed)
@@ -156,7 +156,7 @@ class _ExerciseHistory extends StatelessWidget {
           const SizedBox(height: 4),
           if (st != null)
             Text(
-              '🤖 1RM estimado por la IA: ${st.oneRm.toStringAsFixed(1)} kg (±${(st.sd * 100).toStringAsFixed(0)} %, '
+              '1RM estimado por el modelo: ${st.oneRm.toStringAsFixed(1)} kg (±${(st.sd * 100).toStringAsFixed(0)} %, '
               'confianza ${st.confidence})'
               '${st.trendPerWeek.abs() > 0.002 ? ' · ${st.trendPerWeek > 0 ? '↗' : '↘'} ${(st.trendPerWeek * 100).toStringAsFixed(1)} %/sem' : ''}',
               style: const TextStyle(fontSize: 12, color: Colors.white70),
