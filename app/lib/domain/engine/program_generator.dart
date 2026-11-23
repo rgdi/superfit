@@ -1,18 +1,26 @@
-// Generador de programa a medida.
+// Generador de programa v2 — asignación de volumen POR MÚSCULO.
 //
-// Entradas: perfil (días, minutos, lesiones, prioridades), nivel, objetivo
-// y las máquinas que hay en TU gimnasio.
-// Salida: rutinas + rotación + mesociclo, con una lista de "por qués".
+// v1 planificaba por grandes grupos con plantillas fijas y recortaba a ciegas
+// para caber en el tiempo. La auditoría (180 perfiles) mostró que dejaba a
+// cero aductores, deltoide posterior, abdomen… en la mitad de los casos,
+// con un ratio empuje:tirón de hasta 8:1. v2 lo resuelve como un problema de
+// optimización:
 //
-// Base de las decisiones (ver docs/EVIDENCIA.md):
-// - Frecuencia ≥2×/semana por músculo (Schoenfeld 2016, PMID 27102172).
-// - Más series semanales → más hipertrofia con rendimientos decrecientes
-//   (Schoenfeld 2017, PMID 27805470; Pelland 2026, PMID 41343037). Los
-//   números concretos (8/12/16) son un punto de partida práctico, NO un
-//   umbral demostrado.
-// - Descansos ≥2 min en multiarticulares (Schoenfeld 2016, PMID 26605807;
-//   Grgic 2018, PMID 28933024 — este último solo mide fuerza).
-// - Mantenimiento con ~1/3 del volumen (Bickel 2011, PMID 21131862).
+//  1. Objetivo semanal por músculo = el MISMO que usa el mapa muscular
+//     (muscleWeeklyTarget: nivel, objetivo, prioridades), en series
+//     fraccionales (principal 1, secundario 0,5; Pelland 2026, PMID 41343037).
+//  2. Cada sesión tiene músculos "elegibles" según el split (torso, pierna,
+//     empuje, tirón, cuerpo completo).
+//  3. Asignación voraz: en cada paso se añade la serie (o el ejercicio nuevo,
+//     con 2 series) que más reduce el déficit ponderado POR MINUTO, con:
+//       · tope de ~10 series por músculo y sesión (más rinde poco),
+//       · bonificación por repartir cada músculo en ≥2 sesiones/semana
+//         (Schoenfeld 2016, PMID 27102172),
+//       · rendimiento decreciente al pasar del objetivo,
+//       · solo máquinas del usuario y sin contraindicaciones.
+//  4. Se para al agotar los minutos de la sesión o cuando ya no compensa.
+//
+// Descansos ≥2 min en multiarticulares (Schoenfeld 2016, PMID 26605807).
 import 'dart:math' as math;
 import '../../data/models/exercise.dart';
 import '../../data/models/generated_program.dart';
@@ -20,8 +28,10 @@ import '../../data/models/routine.dart';
 import '../../data/models/training_profile.dart';
 import '../../data/models/user_settings.dart';
 import '../../data/models/workout_item.dart';
+import 'efficiency.dart' show kLengthTips, muscleWeight;
+import 'muscle_stats.dart';
 
-/// Grupo de planificación de un ejercicio.
+/// Grupo de planificación de un ejercicio (para sustituciones en el entreno).
 String groupOf(Exercise e) {
   switch (e.id) {
     case 'back_extension':
@@ -60,44 +70,59 @@ const Map<String, List<String>> _injuryContra = {
 bool contraindicatedFor(Exercise e, Set<String> injuries) => e.contraindications.any((c) =>
     !c.endsWith('_severe') && injuries.any((inj) => (_injuryContra[inj] ?? [inj]).any(c.startsWith)));
 
-class _Slot {
-  final String group;
-  final String? focus; // press | side | rear | upper | null
-  const _Slot(this.group, [this.focus]);
+// ---------------------------------------------------------------- sesiones
+
+const Set<String> _upperM = {
+  'pectoralis_major_clavicular', 'pectoralis_major_sternal', 'deltoid_anterior', 'deltoid_lateral',
+  'deltoid_posterior', 'biceps_brachii', 'brachialis', 'triceps_long', 'triceps_lateral', 'latissimus_dorsi',
+  'trapezius_upper', 'trapezius_middle', 'rhomboids',
+};
+const Set<String> _lowerM = {
+  'quadriceps', 'hamstrings', 'gluteus_maximus', 'gluteus_medius', 'adductors', 'gastrocnemius', 'soleus',
+  'erector_spinae', 'rectus_abdominis', 'obliques',
+};
+const Set<String> _pushM = {
+  'pectoralis_major_clavicular', 'pectoralis_major_sternal', 'deltoid_anterior', 'deltoid_lateral',
+  'triceps_long', 'triceps_lateral',
+};
+const Set<String> _pullM = {
+  'latissimus_dorsi', 'trapezius_upper', 'trapezius_middle', 'rhomboids', 'deltoid_posterior',
+  'biceps_brachii', 'brachialis', 'rectus_abdominis', 'obliques',
+};
+
+class _SessionType {
+  final String nameEs, nameEn;
+  final Set<String> muscles;
+  /// Patrones básicos que la sesión DEBE incluir (músculo principal), en orden.
+  final List<String> core;
+  const _SessionType(this.nameEs, this.nameEn, this.muscles, this.core);
 }
 
-class _DayTemplate {
-  final String nameEs;
-  final String nameEn;
-  final List<_Slot> slots;
-  const _DayTemplate(this.nameEs, this.nameEn, this.slots);
-}
+const _full = _SessionType('Cuerpo completo', 'Full body', {..._upperM, ..._lowerM},
+    ['quadriceps', 'pectoralis_major_sternal', 'latissimus_dorsi', 'hamstrings', 'deltoid_lateral']);
+const _upper = _SessionType('Torso', 'Upper', _upperM,
+    ['pectoralis_major_sternal', 'latissimus_dorsi', 'deltoid_lateral', 'trapezius_middle', 'deltoid_posterior']);
+const _lower = _SessionType('Pierna', 'Lower', _lowerM,
+    ['quadriceps', 'hamstrings', 'gluteus_maximus', 'gastrocnemius', 'rectus_abdominis']);
+const _push = _SessionType('Empuje', 'Push', _pushM,
+    ['pectoralis_major_sternal', 'deltoid_lateral', 'triceps_long']);
+const _pull = _SessionType('Tirón', 'Pull', _pullM,
+    ['latissimus_dorsi', 'trapezius_middle', 'deltoid_posterior', 'biceps_brachii']);
 
-const _upper = [
-  _Slot('chest'), _Slot('back'), _Slot('shoulders', 'press'), _Slot('back'),
-  _Slot('chest', 'upper'), _Slot('shoulders', 'side'), _Slot('triceps'), _Slot('biceps'),
-];
-const _lower = [
-  _Slot('quads'), _Slot('hamstrings'), _Slot('glutes'), _Slot('quads'),
-  _Slot('hamstrings'), _Slot('calves'), _Slot('abs'),
-];
-const _push = [
-  _Slot('chest'), _Slot('shoulders', 'press'), _Slot('chest', 'upper'),
-  _Slot('shoulders', 'side'), _Slot('triceps'), _Slot('triceps'),
-];
-const _pull = [
-  _Slot('back'), _Slot('back'), _Slot('shoulders', 'rear'), _Slot('biceps'),
-  _Slot('biceps'), _Slot('abs'),
-];
-const _legs = [
-  _Slot('quads'), _Slot('hamstrings'), _Slot('glutes'), _Slot('quads'),
-  _Slot('calves'), _Slot('abs'),
-];
-const _full = [
-  _Slot('quads'), _Slot('chest'), _Slot('back'), _Slot('hamstrings'),
-  _Slot('shoulders', 'side'), _Slot('glutes'), _Slot('triceps'), _Slot('biceps'),
-  _Slot('calves'), _Slot('abs'),
-];
+/// Días recomendados (1 = lunes) para repartir la recuperación.
+const Map<int, List<int>> kScheduleDays = {
+  2: [1, 4],
+  3: [1, 3, 5],
+  4: [1, 2, 4, 5],
+  5: [1, 2, 3, 5, 6],
+  6: [1, 2, 3, 4, 5, 6],
+};
+
+class _Item {
+  final Exercise ex;
+  int sets;
+  _Item(this.ex, this.sets);
+}
 
 class ProgramGenerator {
   final List<Exercise> catalog;
@@ -114,137 +139,227 @@ class ProgramGenerator {
     required this.goal,
   });
 
-  final List<String> _why = [];
-
-  Exercise _byId(String id) => catalog.firstWhere((e) => e.id == id);
+  static const int _warmupSec = 5 * 60;
+  static const int _setupSec = 60; // cambiar/ajustar máquina
+  static const int _workSec = 40; // duración de una serie
+  static const double _sessionCap = 10; // series fraccionales por músculo y sesión
+  static const int _maxSetsPerExercise = 5;
 
   GeneratedProgram generate({DateTime? now}) {
-    _why.clear();
     final days = profile.daysPerWeek.clamp(2, 6);
-    final (split, templates) = _split(days);
+    final (split, sessions) = _split(days);
+    final why = <String>[];
 
-    // --- Ejercicios utilizables ---
-    final usable = catalog.where(_isUsable).toList();
-    final excludedByInjury = catalog.where((e) =>
-        (availableTypes == null || e.usableWith(availableTypes!)) && _contraindicated(e)).toList();
-    if (availableTypes != null) {
-      _why.add('Solo uso ejercicios que puedes hacer con tus ${availableTypes!.length} tipos de máquina configurados.');
-    } else {
-      _why.add('No has configurado máquinas: asumo que tu gimnasio tiene todas las del catálogo. '
-          'Añádelas en Ajustes → Mis máquinas para afinar.');
-    }
-    final cautious = catalog.where((e) =>
-        (availableTypes == null || e.usableWith(availableTypes!)) && _caution(e)).toList();
-    if (cautious.isNotEmpty) {
-      _why.add('Con precaución (rango sin dolor): ${cautious.map((e) => e.nameEs).join(', ')}.');
-    }
-    if (excludedByInjury.isNotEmpty) {
-      _why.add('Excluidos por molestias (${profile.injuries.map((i) => kInjuryLabels[i] ?? i).join(', ')}): '
-          '${excludedByInjury.map((e) => e.nameEs).join(', ')}.');
-    }
+    // --- Ejercicios utilizables
+    final machineOk = catalog.where((e) => availableTypes == null || e.usableWith(availableTypes!)).toList();
+    final usable = machineOk.where((e) => !contraindicatedFor(e, profile.injuries)).toList();
+    final excluded = machineOk.where((e) => contraindicatedFor(e, profile.injuries)).toList();
+    final cautious = usable.where((e) => _caution(e)).toList();
 
-    // --- Volumen semanal objetivo por grupo ---
-    final weekly = <String, int>{};
-    for (final g in kMuscleGroupLabels.keys) {
-      weekly[g] = _weeklyTarget(g);
-    }
+    // --- Objetivos por músculo (los mismos del mapa muscular)
+    final muscles = {..._upperM, ..._lowerM};
+    final target = {
+      for (final m in muscles)
+        m: muscleWeeklyTarget(m, level, goal: goal, priorities: profile.priorities),
+    };
+    double w(String m) => muscleWeight(m) * (profile.priorities.contains(muscleGroupOf(m)) ? 1.3 : 1.0);
 
-    // Ocurrencias de cada grupo en la semana (cada plantilla = 1 sesión)
-    final occurrences = <String, int>{};
-    for (final t in templates) {
-      for (final s in t.slots) {
-        occurrences[s.group] = (occurrences[s.group] ?? 0) + 1;
+    // --- Estado
+    final plan = [for (final _ in sessions) <_Item>[]];
+    final used = [for (final _ in sessions) 0.0]; // segundos
+    final budget = profile.sessionMinutes * 60.0 - _warmupSec;
+    final vol = {for (final m in muscles) m: 0.0};
+    final sessVol = [for (final _ in sessions) {for (final m in muscles) m: 0.0}];
+    final freq = {for (final m in muscles) m: 0};
+
+    int rest(Exercise e) => _rest(e);
+    double setCost(Exercise e) => (_workSec + rest(e)).toDouble();
+    Iterable<(String, double)> contrib(Exercise e) sync* {
+      for (final m in e.primaryMuscles) {
+        if (muscles.contains(m)) yield (m, 1.0);
+      }
+      for (final m in e.secondaryMuscles) {
+        if (muscles.contains(m)) yield (m, 0.5);
       }
     }
 
-    // --- Construir rutinas ---
+    // Valor de tener v series de un músculo: lineal hasta el objetivo,
+    // después rendimiento decreciente (15 %) hasta 1,4× y 0 más allá.
+    double value(String m, double v) {
+      final t = target[m]!;
+      if (v <= t) return v;
+      if (v <= 1.4 * t) return t + 0.15 * (v - t);
+      return t + 0.15 * 0.4 * t;
+    }
+
+    double gain(int s, Exercise e, int k) {
+      var g = 0.0;
+      final bonus = kLengthTips.containsKey(e.id) ? 1.08 : 1.0;
+      for (final (m, c) in contrib(e)) {
+        // tope por sesión
+        final room = math.max(0.0, _sessionCap - sessVol[s][m]!);
+        final add = math.min(room, c * k);
+        if (add <= 0) continue;
+        var dg = value(m, vol[m]! + add) - value(m, vol[m]!);
+        // Frecuencia: premiar el primer estímulo del músculo en esta sesión
+        // si aún no se trabaja 2 veces por semana
+        if (sessVol[s][m]! == 0 && freq[m]! < 2 && sessions.length > 1) dg += 0.35 * c;
+        g += w(m) * dg * bonus;
+      }
+      return g;
+    }
+
+    bool eligible(int s, Exercise e) =>
+        e.primaryMuscles.isNotEmpty && e.primaryMuscles.every(sessions[s].muscles.contains);
+
+    void apply(int s, Exercise e, int k) {
+      for (final (m, c) in contrib(e)) {
+        if (sessVol[s][m]! == 0) freq[m] = freq[m]! + 1;
+        sessVol[s][m] = sessVol[s][m]! + c * k;
+        vol[m] = vol[m]! + c * k;
+      }
+    }
+
+    // --- Fase 1 (estructura): cada sesión incluye sus patrones básicos.
+    // Sin esto, con poco tiempo el optimizador prefiere ejercicios de torso
+    // (tocan más músculos) y podía dejar un "cuerpo completo" sin piernas.
+    for (int s = 0; s < sessions.length; s++) {
+      for (final m in sessions[s].core) {
+        if (sessVol[s][m]! > 0) continue;
+        Exercise? best;
+        var bestSc = 0.0;
+        for (final e in usable) {
+          if (!eligible(s, e) || !e.primaryMuscles.contains(m) || plan[s].any((it) => it.ex.id == e.id)) continue;
+          final cost = _setupSec + 2 * setCost(e);
+          if (used[s] + cost > budget) continue;
+          final twin = _twinHas(sessions, plan, s, e.id) ? 0.92 : 1.0;
+          final sc = gain(s, e, 2) * twin / (cost / 60);
+          if (sc > bestSc) {
+            bestSc = sc;
+            best = e;
+          }
+        }
+        if (best == null) continue;
+        plan[s].add(_Item(best, 2));
+        used[s] += _setupSec + 2 * setCost(best);
+        apply(s, best, 2);
+      }
+    }
+
+    // --- Fase 2: asignación voraz
+    for (var guard = 0; guard < 400; guard++) {
+      double bestScore = 0;
+      int? bs;
+      Exercise? be;
+      _Item? bItem;
+      for (int s = 0; s < sessions.length; s++) {
+        // Ampliar un ejercicio existente (+1 serie)
+        for (final it in plan[s]) {
+          if (it.sets >= _maxSetsPerExercise) continue;
+          final cost = setCost(it.ex);
+          if (used[s] + cost > budget) continue;
+          final sc = gain(s, it.ex, 1) / (cost / 60);
+          if (sc > bestScore + 1e-9) {
+            bestScore = sc;
+            bs = s;
+            be = it.ex;
+            bItem = it;
+          }
+        }
+        // Añadir un ejercicio nuevo (2 series)
+        for (final e in usable) {
+          if (!eligible(s, e) || plan[s].any((it) => it.ex.id == e.id)) continue;
+          final cost = _setupSec + 2 * setCost(e);
+          if (used[s] + cost > budget) continue;
+          // Variedad: ligera penalización si la sesión "gemela" ya lo usa
+          final twin = _twinHas(sessions, plan, s, e.id) ? 0.92 : 1.0;
+          final sc = gain(s, e, 2) * twin / (cost / 60);
+          if (sc > bestScore + 1e-9) {
+            bestScore = sc;
+            bs = s;
+            be = e;
+            bItem = null;
+          }
+        }
+      }
+      if (bs == null || bestScore < 0.12) break; // ya no compensa
+      if (bItem != null) {
+        bItem.sets++;
+        used[bs] += setCost(be!);
+        apply(bs, be, 1);
+      } else {
+        plan[bs].add(_Item(be!, 2));
+        used[bs] += _setupSec + 2 * setCost(be);
+        apply(bs, be, 2);
+      }
+    }
+
+    // --- Rutinas (multiarticulares primero; luego por tamaño de músculo)
     final routines = <Routine>[];
-    final usedByTemplateName = <String, int>{}; // para variar A/B
-    for (int d = 0; d < templates.length; d++) {
-      final t = templates[d];
-      final variant = usedByTemplateName[t.nameEs] ?? 0;
-      usedByTemplateName[t.nameEs] = variant + 1;
-      final items = <WorkoutItem>[];
-      final used = <String>{};
-      final missing = <String>{};
-      for (final slot in t.slots) {
-        final ex = _pick(usable, slot, used, variant);
-        if (ex == null) {
-          // Sin ejercicio nuevo para este hueco: pasa sus series a otro
-          // ejercicio del mismo grupo en la sesión (máx. 5 por ejercicio).
-          final perSlot = (weekly[slot.group]! / (occurrences[slot.group] ?? 1)).round();
-          final idx = items.indexWhere((it) => groupOf(_byId(it.exerciseId)) == slot.group);
-          if (idx >= 0 && items[idx].sets < 5) {
-            items[idx] = items[idx].copyWith(sets: (items[idx].sets + perSlot).clamp(2, 5));
-          } else if (idx < 0) {
-            missing.add(kMuscleGroupLabels[slot.group] ?? slot.group);
-          }
-          continue;
-        }
-        used.add(ex.id);
-        final occ = occurrences[slot.group] ?? 1;
-        final raw = (weekly[slot.group]! / occ).round();
-        items.add(_item(ex, raw.clamp(2, 5)));
-        // Más de 5 series por slot (p. ej. grupo prioritario) → segundo ejercicio
-        if (raw > 5) {
-          final extra = _pick(usable, _Slot(slot.group), used, variant);
-          if (extra != null) {
-            used.add(extra.id);
-            items.add(_item(extra, (raw - 5).clamp(2, 5)));
-          }
-        }
-      }
-      if (missing.isNotEmpty) {
-        _why.add('${t.nameEs}${_suffix(templates, d)}: sin ejercicio disponible para ${missing.join(', ')} '
-            '(falta máquina o está excluido por lesión).');
-      }
-      final fitted = _fitToTime(items, usable);
-      final suffix = _suffix(templates, d);
+    for (int s = 0; s < sessions.length; s++) {
+      final items = plan[s]..sort(_order);
+      final workout = [for (final it in items) _item(it.ex, it.sets)];
+      final suffix = _suffix(sessions, s);
       routines.add(Routine(
-        id: 'gen_${d + 1}',
-        nameEs: '${t.nameEs}$suffix',
-        nameEn: '${t.nameEn}$suffix',
-        dayOfWeek: d + 1,
-        estimatedMinutes: estimateMinutes(fitted),
+        id: 'gen_${s + 1}',
+        nameEs: '${sessions[s].nameEs}$suffix',
+        nameEn: '${sessions[s].nameEn}$suffix',
+        dayOfWeek: kScheduleDays[days]![s % kScheduleDays[days]!.length],
+        estimatedMinutes: estimateMinutes(workout),
         level: level.name,
         goal: goal.name,
         warmup: [
-          WarmupItem(
-            type: 'mobility',
-            nameEs: '5 min de cardio suave (bici, elíptica…)',
-            nameEn: '5 min easy cardio',
-            durationSeconds: 300,
-          ),
-          WarmupItem(
-            type: 'activation',
-            nameEs: '1-2 series de aproximación del primer ejercicio (50% y 75%)',
-            nameEn: '1-2 ramp-up sets of the first exercise',
-            durationSeconds: 120,
-          ),
+          WarmupItem(type: 'mobility', nameEs: '5 min de cardio suave (bici, elíptica…)', nameEn: '5 min easy cardio', durationSeconds: 300),
+          WarmupItem(type: 'activation', nameEs: '1-2 series de aproximación del primer ejercicio', nameEn: '1-2 ramp-up sets', durationSeconds: 120),
         ],
-        workout: fitted,
+        workout: workout,
         cooldown: const [],
       ));
     }
 
-    // Volumen semanal efectivamente planificado
-    final planned = <String, int>{};
+    // --- Resumen honesto, con cifras reales
+    final inTarget = muscles.where((m) => vol[m]! >= 0.9 * target[m]!).length;
+    final short = (muscles.where((m) => vol[m]! < 0.6 * target[m]!).toList()
+          ..sort((a, b) => (vol[a]! / target[a]!).compareTo(vol[b]! / target[b]!)))
+        .toList();
+    final zero = muscles.where((m) => vol[m] == 0).toList();
+    final twice = muscles.where((m) => freq[m]! >= 2).length;
+    const dayNames = ['', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    why.add('$days días/semana → $split. Días sugeridos: '
+        '${kScheduleDays[days]!.map((d) => dayNames[d]).join(', ')}.');
+    why.add('$inTarget de ${muscles.length} músculos llegan a su objetivo semanal; '
+        '$twice se trabajan al menos 2 veces por semana.');
+    if (short.isNotEmpty) {
+      final reason = availableTypes != null || profile.injuries.isNotEmpty
+          ? 'por tiempo, máquinas disponibles o molestias'
+          : 'por el tiempo por sesión';
+      why.add('Por debajo de objetivo ($reason): ${short.take(5).map(_muscleEs).join(', ')}.');
+    }
+    if (zero.isNotEmpty && availableTypes != null) {
+      why.add('Sin ninguna máquina para: ${zero.map(_muscleEs).join(', ')}. Añádelas en Mis máquinas si las hay.');
+    }
+    if (excluded.isNotEmpty) {
+      why.add('Excluidos por molestias: ${excluded.map((e) => e.nameEs).join(', ')}.');
+    }
+    if (cautious.isNotEmpty) {
+      why.add('Con precaución (rango sin dolor): ${cautious.map((e) => e.nameEs).join(', ')}.');
+    }
+    if (profile.priorities.isNotEmpty) {
+      why.add('Prioridad: ${profile.priorities.map((p) => kMuscleGroupLabels[p]).join(', ')} (+35 % de volumen objetivo).');
+    }
+    why.add('Mesociclo de ${profile.mesocycleWeeks} semanas: el esfuerzo sube semana a semana y la última es de descarga.');
+
+    // Series directas por grupo (para mostrar)
+    final weekly = <String, int>{};
     for (final r in routines) {
       for (final it in r.workout) {
-        final ex = catalog.firstWhere((e) => e.id == it.exerciseId);
-        final g = groupOf(ex);
-        planned[g] = (planned[g] ?? 0) + it.sets;
+        final e = catalog.firstWhere((x) => x.id == it.exerciseId);
+        final groups = e.primaryMuscles.map(muscleGroupOf).toSet();
+        for (final g in groups) {
+          weekly[g] = (weekly[g] ?? 0) + it.sets;
+        }
       }
     }
-
-    _why.insert(0, '$days días/semana → $split. ${_freqNote(split)}');
-    _why.insert(1, 'Volumen objetivo por grupo: ~${_weeklyTarget('chest')} series/semana '
-        '(${_levelEs()}, ${_goalEs()}). Es un punto de partida: el sistema te avisará si te estancas o vas sobrado.');
-    if (profile.priorities.isNotEmpty) {
-      _why.insert(2, 'Prioridad: ${profile.priorities.map((p) => kMuscleGroupLabels[p]).join(', ')} → +4 series/semana.');
-    }
-    _why.add('Mesociclo de ${profile.mesocycleWeeks} semanas: el RPE objetivo sube semana a semana '
-        'y la última es de descarga (mitad de series). Si detecto fatiga antes, te propongo descargar antes.');
 
     final start = now ?? DateTime.now();
     return GeneratedProgram(
@@ -254,139 +369,58 @@ class ProgramGenerator {
       routines: routines,
       rotation: routines.map((r) => r.id).toList(),
       mesocycleWeeks: profile.mesocycleWeeks,
-      rationale: List.of(_why),
-      weeklySets: planned,
+      rationale: why,
+      weeklySets: weekly,
     );
   }
 
-  // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------- ayudas
 
-  (String, List<_DayTemplate>) _split(int days) {
-    switch (days) {
-      case 2:
-        return ('Cuerpo completo A/B', const [
-          _DayTemplate('Cuerpo completo', 'Full body', _full),
-          _DayTemplate('Cuerpo completo', 'Full body', _full),
-        ]);
-      case 3:
-        return ('Cuerpo completo A/B/C', const [
-          _DayTemplate('Cuerpo completo', 'Full body', _full),
-          _DayTemplate('Cuerpo completo', 'Full body', _full),
-          _DayTemplate('Cuerpo completo', 'Full body', _full),
-        ]);
-      case 4:
-        return ('Torso / Pierna', const [
-          _DayTemplate('Torso', 'Upper', _upper),
-          _DayTemplate('Pierna', 'Lower', _lower),
-          _DayTemplate('Torso', 'Upper', _upper),
-          _DayTemplate('Pierna', 'Lower', _lower),
-        ]);
-      case 5:
-        return ('Torso / Pierna + Empuje / Tirón / Pierna', const [
-          _DayTemplate('Torso', 'Upper', _upper),
-          _DayTemplate('Pierna', 'Lower', _lower),
-          _DayTemplate('Empuje', 'Push', _push),
-          _DayTemplate('Tirón', 'Pull', _pull),
-          _DayTemplate('Pierna', 'Legs', _legs),
-        ]);
-      default:
-        return ('Empuje / Tirón / Pierna ×2', const [
-          _DayTemplate('Empuje', 'Push', _push),
-          _DayTemplate('Tirón', 'Pull', _pull),
-          _DayTemplate('Pierna', 'Legs', _legs),
-          _DayTemplate('Empuje', 'Push', _push),
-          _DayTemplate('Tirón', 'Pull', _pull),
-          _DayTemplate('Pierna', 'Legs', _legs),
-        ]);
+  (String, List<_SessionType>) _split(int days) => switch (days) {
+        2 => ('Cuerpo completo A/B', const [_full, _full]),
+        3 => ('Cuerpo completo A/B/C', const [_full, _full, _full]),
+        4 => ('Torso / Pierna', const [_upper, _lower, _upper, _lower]),
+        5 => ('Torso / Pierna + Empuje / Tirón / Pierna', const [_upper, _lower, _push, _pull, _lower]),
+        _ => ('Empuje / Tirón / Pierna ×2', const [_push, _pull, _lower, _push, _pull, _lower]),
+      };
+
+  bool _twinHas(List<_SessionType> ss, List<List<_Item>> plan, int s, String id) {
+    for (int i = 0; i < ss.length; i++) {
+      if (i != s && identical(ss[i], ss[s]) && plan[i].any((it) => it.ex.id == id)) return true;
     }
+    return false;
   }
 
-  String _suffix(List<_DayTemplate> ts, int d) {
-    final same = ts.where((t) => t.nameEs == ts[d].nameEs).length;
+  String _suffix(List<_SessionType> ss, int s) {
+    final same = ss.where((t) => identical(t, ss[s])).length;
     if (same < 2) return '';
-    final idx = ts.take(d + 1).where((t) => t.nameEs == ts[d].nameEs).length - 1;
+    final idx = ss.take(s + 1).where((t) => identical(t, ss[s])).length - 1;
     return ' ${String.fromCharCode(65 + idx)}';
   }
 
-  String _freqNote(String split) => split.startsWith('Cuerpo')
-      ? 'Cada músculo se trabaja en todas las sesiones.'
-      : 'Cada músculo ~2×/semana (frecuencia ≥2 es al menos tan buena como 1× a igual volumen).';
+  int _order(_Item a, _Item b) {
+    int rank(_Item it) => it.ex.category == 'compound' ? 0 : 1;
+    final r = rank(a).compareTo(rank(b));
+    if (r != 0) return r;
+    // Prioritarios antes
+    int pri(_Item it) => it.ex.primaryMuscles.any((m) => profile.priorities.contains(muscleGroupOf(m))) ? 0 : 1;
+    final p = pri(a).compareTo(pri(b));
+    if (p != 0) return p;
+    double size(_Item it) => it.ex.primaryMuscles.map(muscleWeight).fold(0.0, math.max);
+    return size(b).compareTo(size(a));
+  }
 
-  int _weeklyTarget(String g) {
-    double base = switch (level) {
-      UserLevel.beginner => 8,
-      UserLevel.intermediate => 12,
-      UserLevel.advanced => 16,
+  int _rest(Exercise e) {
+    final compound = e.category == 'compound';
+    return switch (goal) {
+      UserGoal.strength => compound ? 180 : 90,
+      _ => compound ? 120 : 75,
     };
-    switch (goal) {
-      case UserGoal.maintenance:
-        base = math.max(4, base / 3).toDouble();
-        break;
-      case UserGoal.strength:
-        base *= 0.8;
-        break;
-      case UserGoal.hypertrophy:
-      case UserGoal.definition:
-        break;
-    }
-    // Grupos pequeños reciben volumen indirecto de los multiarticulares
-    if (const {'biceps', 'triceps', 'calves', 'abs'}.contains(g)) base *= 0.6;
-    if (g == 'shoulders') base *= 0.8;
-    if (profile.priorities.contains(g)) base += 4;
-    return base.round().clamp(2, 24);
   }
 
-  /// Contraindicaciones de esta persona que afectan al ejercicio.
-  List<String> _hits(Exercise e) => [
-        for (final inj in profile.injuries)
-          for (final c in e.contraindications)
-            if ((_injuryContra[inj] ?? [inj]).any(c.startsWith)) c,
-      ];
-
-  /// Excluido si alguna contraindicación NO es solo para casos "_severe".
-  /// (Una molestia no es una lesión grave: un press de pecho guiado suele
-  /// tolerarse con un rango sin dolor; un pec deck en estiramiento, peor.)
-  bool _contraindicated(Exercise e) => _hits(e).any((c) => !c.endsWith('_severe'));
-
-  /// Permitido pero con precaución (solo contraindicado en casos graves).
-  bool _caution(Exercise e) => !_contraindicated(e) && _hits(e).isNotEmpty;
-
-  bool _isUsable(Exercise e) {
-    if (availableTypes != null && !e.usableWith(availableTypes!)) return false;
-    return !_contraindicated(e);
-  }
-
-  bool _matchesFocus(Exercise e, String? focus) => switch (focus) {
-        'press' => e.pattern == 'vertical_push',
-        'side' => e.primaryMuscles.contains('deltoid_lateral'),
-        'rear' => e.primaryMuscles.contains('deltoid_posterior'),
-        'upper' => e.primaryMuscles.first == 'pectoralis_major_clavicular',
-        _ => true,
-      };
-
-  Exercise? _pick(List<Exercise> usable, _Slot slot, Set<String> used, int variant) {
-    var cands = usable.where((e) => groupOf(e) == slot.group && !used.contains(e.id)).toList();
-    if (cands.isEmpty) return null;
-    final focused = cands.where((e) => _matchesFocus(e, slot.focus)).toList();
-    if (focused.isNotEmpty) cands = focused;
-    // Primero los que trabajan el grupo como músculo principal (curl femoral
-    // antes que extensión lumbar para isquios), luego multiarticulares.
-    int natural(Exercise e) => e.id == 'back_extension' ? 1 : 0;
-    cands.sort((a, b) {
-      final na = natural(a), nb = natural(b);
-      if (na != nb) return na.compareTo(nb);
-      final ca = a.category == 'compound' ? 0 : 1;
-      final cb = b.category == 'compound' ? 0 : 1;
-      if (ca != cb) return ca.compareTo(cb);
-      return a.id.compareTo(b.id);
-    });
-    // Variante B/C → rota el candidato para dar variedad, si hay opciones
-    // del mismo tipo (compuesto/aislado) que el primero.
-    final sameKind = cands
-        .where((e) => e.category == cands.first.category && natural(e) == natural(cands.first))
-        .toList();
-    return sameKind[variant % sameKind.length];
-  }
+  /// Molestia: permitido con precaución (solo contraindicado en casos graves).
+  bool _caution(Exercise e) => profile.injuries.any((inj) => e.contraindications
+      .any((c) => c.endsWith('_severe') && (_injuryContra[inj] ?? [inj]).any(c.startsWith)));
 
   WorkoutItem _item(Exercise ex, int sets) {
     final compound = ex.category == 'compound';
@@ -394,83 +428,51 @@ class ProgramGenerator {
       UserGoal.strength => compound ? '5-8' : '8-12',
       _ => ex.defaultReps,
     };
-    final rest = switch (goal) {
-      UserGoal.strength => compound ? 180 : 90,
-      _ => compound ? 120 : 75,
-    };
     return WorkoutItem(
       exerciseId: ex.id,
       sets: sets,
       repsTarget: reps,
       rpeTarget: 8,
-      restSeconds: rest,
+      restSeconds: _rest(ex),
       tempo: ex.tempo,
-      notesEs: _caution(ex)
-          ? 'Con tu molestia: usa un rango sin dolor. Si molesta, cámbialo por otro.'
-          : null,
+      notesEs: _caution(ex) ? 'Con tu molestia: usa un rango sin dolor. Si molesta, cámbialo por otro.' : null,
       notesEn: _caution(ex) ? 'Pain-free range only; swap it if it hurts.' : null,
     );
   }
 
-  /// Minutos estimados: 5 calentamiento + (40 s trabajo + descanso) por serie
-  /// + 1 min de cambio/ajuste de máquina por ejercicio.
+  static String _muscleEs(String m) => const {
+        'pectoralis_major_clavicular': 'pecho alto',
+        'pectoralis_major_sternal': 'pecho',
+        'deltoid_anterior': 'deltoides anterior',
+        'deltoid_lateral': 'deltoides lateral',
+        'deltoid_posterior': 'deltoides posterior',
+        'biceps_brachii': 'bíceps',
+        'brachialis': 'braquial',
+        'triceps_long': 'tríceps (larga)',
+        'triceps_lateral': 'tríceps (lateral)',
+        'latissimus_dorsi': 'dorsal',
+        'trapezius_upper': 'trapecio superior',
+        'trapezius_middle': 'trapecio medio',
+        'rhomboids': 'romboides',
+        'rectus_abdominis': 'abdomen',
+        'obliques': 'oblicuos',
+        'erector_spinae': 'lumbares',
+        'quadriceps': 'cuádriceps',
+        'hamstrings': 'isquios',
+        'gluteus_maximus': 'glúteo mayor',
+        'gluteus_medius': 'glúteo medio',
+        'adductors': 'aductores',
+        'gastrocnemius': 'gemelos',
+        'soleus': 'sóleo',
+      }[m] ??
+      m;
+
+  /// Minutos estimados: 5 calentamiento + (40 s + descanso) por serie + 1 min por ejercicio.
   static int estimateMinutes(List<WorkoutItem> items) {
-    double s = 5 * 60;
+    double s = _warmupSec.toDouble();
     for (final it in items) {
-      s += it.sets * (40 + it.restSeconds) + 60;
+      s += it.sets * (_workSec + it.restSeconds) + _setupSec;
     }
     return (s / 60).round();
   }
-
-  List<WorkoutItem> _fitToTime(List<WorkoutItem> items, List<Exercise> usable) {
-    final out = List<WorkoutItem>.of(items);
-    final budget = profile.sessionMinutes;
-    bool isPriority(WorkoutItem it) {
-      final ex = catalog.firstWhere((e) => e.id == it.exerciseId);
-      return profile.priorities.contains(groupOf(ex));
-    }
-
-    bool isIsolation(WorkoutItem it) =>
-        catalog.firstWhere((e) => e.id == it.exerciseId).category != 'compound';
-
-    var trimmed = false;
-    while (estimateMinutes(out) > budget) {
-      // 1) quita una serie al ejercicio con más series (aislados no prioritarios primero)
-      final candidates = out.where((it) => it.sets > 2).toList()
-        ..sort((a, b) {
-          int rank(WorkoutItem it) => (isPriority(it) ? 2 : 0) + (isIsolation(it) ? 0 : 1);
-          final r = rank(a).compareTo(rank(b));
-          return r != 0 ? r : b.sets.compareTo(a.sets);
-        });
-      if (candidates.isNotEmpty) {
-        final c = candidates.first;
-        out[out.indexOf(c)] = c.copyWith(sets: c.sets - 1);
-        trimmed = true;
-        continue;
-      }
-      // 2) quita el último ejercicio no prioritario
-      if (out.length <= 3) break;
-      final idx = out.lastIndexWhere((it) => !isPriority(it));
-      out.removeAt(idx < 0 ? out.length - 1 : idx);
-      trimmed = true;
-    }
-    if (trimmed && !_why.any((w) => w.startsWith('Ajustado a'))) {
-      _why.add('Ajustado a tus $budget min por sesión: he recortado series de ejercicios de aislamiento '
-          'no prioritarios. Con más tiempo, el volumen sube automáticamente.');
-    }
-    return out;
-  }
-
-  String _levelEs() => switch (level) {
-        UserLevel.beginner => 'principiante',
-        UserLevel.intermediate => 'intermedio',
-        UserLevel.advanced => 'avanzado',
-      };
-
-  String _goalEs() => switch (goal) {
-        UserGoal.hypertrophy => 'hipertrofia',
-        UserGoal.strength => 'fuerza',
-        UserGoal.maintenance => 'mantenimiento',
-        UserGoal.definition => 'definición',
-      };
 }

@@ -96,7 +96,7 @@
     "name_es": "Pec deck (aperturas en máquina)",
     "name_en": "Pec deck fly",
     "category": "isolation",
-    "pattern": "horizontal_pull",
+    "pattern": "horizontal_push",
     "primary_muscles": [
       "pectoralis_major_sternal"
     ],
@@ -140,7 +140,7 @@
     "name_es": "Cable crossover (functional trainer)",
     "name_en": "Cable crossover",
     "category": "isolation",
-    "pattern": "horizontal_pull",
+    "pattern": "horizontal_push",
     "primary_muscles": [
       "pectoralis_major_sternal"
     ],
@@ -240,7 +240,7 @@
     "secondary_muscles": [
       "biceps_brachii",
       "brachialis",
-      "erector_spinae"
+      "deltoid_posterior"
     ],
     "equipment_id": "seated_row",
     "image_path": "assets/images/exercises/seated_row_machine.png",
@@ -509,7 +509,7 @@
       "gluteus_maximus"
     ],
     "secondary_muscles": [
-      "hamstrings"
+      "adductors"
     ],
     "equipment_id": "leg_press",
     "image_path": "assets/images/exercises/leg_press.png",
@@ -554,7 +554,7 @@
       "gluteus_maximus"
     ],
     "secondary_muscles": [
-      "hamstrings"
+      "adductors"
     ],
     "equipment_id": "hack_squat",
     "image_path": "assets/images/exercises/hack_squat.png",
@@ -1079,9 +1079,7 @@
     "primary_muscles": [
       "adductors"
     ],
-    "secondary_muscles": [
-      "gluteus_maximus"
-    ],
+    "secondary_muscles": [],
     "equipment_id": "hip_adductor",
     "image_path": "assets/images/exercises/hip_abductor.png",
     "instructions_es": [

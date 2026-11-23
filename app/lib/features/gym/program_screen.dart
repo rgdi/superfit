@@ -9,6 +9,9 @@ import '../../data/models/generated_program.dart';
 import '../../data/models/training_profile.dart';
 import '../../domain/engine/program_coach.dart';
 import '../../domain/engine/program_generator.dart';
+import '../../domain/engine/muscle_stats.dart';
+import '../../core/names.dart';
+import '../../data/models/user_settings.dart';
 import '../../widgets/exercise_animation.dart';
 
 class ProgramScreen extends ConsumerWidget {
@@ -37,11 +40,13 @@ class ProgramScreen extends ConsumerWidget {
         builder: (context, snap) {
           if (!snap.hasData) return const Center(child: CircularProgressIndicator());
           final byId = {for (final e in snap.data!) e.id: e};
+          final settings = ref.watch(userSettingsProvider);
+          final priorities = ref.watch(trainingProfileProvider).priorities;
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               if (program == null) _generateCard(context, ref, snap.data!, false),
-              if (program != null) ..._programView(context, program, byId),
+              if (program != null) ..._programView(context, program, byId, settings, priorities),
               if (program != null) ...[
                 const SizedBox(height: 24),
                 _generateCard(context, ref, snap.data!, true),
@@ -115,7 +120,60 @@ class ProgramScreen extends ConsumerWidget {
     );
   }
 
-  List<Widget> _programView(BuildContext context, GeneratedProgram p, Map<String, Exercise> byId) {
+  /// Misma medida que el mapa muscular, pero con lo PLANIFICADO.
+  List<Widget> _muscleCoverage(GeneratedProgram p, Map<String, Exercise> byId, UserSettings settings, Set<String> priorities) {
+    final vol = <String, double>{};
+    for (final r in p.routines) {
+      for (final it in r.workout) {
+        final e = byId[it.exerciseId];
+        if (e == null) continue;
+        for (final m in e.primaryMuscles) {
+          vol[m] = (vol[m] ?? 0) + it.sets;
+        }
+        for (final m in e.secondaryMuscles) {
+          vol[m] = (vol[m] ?? 0) + it.sets * 0.5;
+        }
+      }
+    }
+    final rows = Names.muscles.keys.map((m) {
+      final t = muscleWeeklyTarget(m, settings.level, goal: settings.goal, priorities: priorities);
+      return (m, vol[m] ?? 0.0, t);
+    }).toList()
+      ..sort((a, b) => (a.$2 / a.$3).compareTo(b.$2 / b.$3));
+    return [
+      for (final (m, v, t) in rows)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(children: [
+            SizedBox(
+              width: 150,
+              child: Text(Names.muscle(m),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, color: kMinorMuscles.contains(m) ? AppTheme.textMuted : Colors.white)),
+            ),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: (v / t).clamp(0.0, 1.0),
+                  minHeight: 5,
+                  color: v >= 0.9 * t ? AppTheme.signal : Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 58,
+              child: Text('${v.toStringAsFixed(v % 1 == 0 ? 0 : 1)}/${t.round()}',
+                  textAlign: TextAlign.right, style: const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
+            ),
+          ]),
+        ),
+    ];
+  }
+
+  List<Widget> _programView(BuildContext context, GeneratedProgram p, Map<String, Exercise> byId,
+      UserSettings settings, Set<String> priorities) {
     final now = DateTime.now();
     final coach = ProgramCoach(p);
     final week = p.weekFor(now);
@@ -151,19 +209,12 @@ class ProgramScreen extends ConsumerWidget {
         ],
       ),
       const SizedBox(height: 8),
-      const Text('Series semanales por grupo', style: TextStyle(fontWeight: FontWeight.w700)),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: [
-          for (final e in kMuscleGroupLabels.entries)
-            Chip(
-              label: Text('${e.value} ${p.weeklySets[e.key] ?? 0}'),
-              backgroundColor: (p.weeklySets[e.key] ?? 0) == 0 ? AppTheme.secondary.withOpacity(0.2) : null,
-            ),
-        ],
-      ),
+      const Text('Volumen semanal por músculo', style: TextStyle(fontWeight: FontWeight.w700)),
+      const SizedBox(height: 4),
+      const Text('Series planificadas frente a tu objetivo (principal 1, secundario 0,5).',
+          style: TextStyle(fontSize: 13, color: AppTheme.textMuted)),
+      const SizedBox(height: 12),
+      ..._muscleCoverage(p, byId, settings, priorities),
       const SizedBox(height: 16),
       for (final r in p.routines)
         Card(

@@ -36,7 +36,11 @@ class MuscleStat {
   /// 0 = nada, 1 = en objetivo, >1 = por encima
   double get ratio => target <= 0 ? 0 : weeklySets / target;
 
+  /// Lumbares, oblicuos, trapecio superior: no exigen series directas.
+  bool get optional => kMinorMuscles.contains(id);
+
   String get status {
+    if (optional && ratio < 0.9) return 'Opcional';
     if (weeklySets < 0.5) return 'Sin trabajar';
     if (ratio < 0.5) return 'Poco volumen';
     if (ratio < 0.9) return 'Casi en objetivo';
@@ -45,12 +49,45 @@ class MuscleStat {
   }
 }
 
+/// Grupo de planificación (prioridades del perfil) al que pertenece un músculo.
+String muscleGroupOf(String m) {
+  if (m.startsWith('pectoralis')) return 'chest';
+  if (m.startsWith('latissimus') || m == 'rhomboids' || m.startsWith('trapezius') || m == 'erector_spinae') return 'back';
+  if (m.startsWith('deltoid')) return 'shoulders';
+  if (m == 'biceps_brachii' || m == 'brachialis') return 'biceps';
+  if (m.startsWith('triceps')) return 'triceps';
+  if (m == 'quadriceps') return 'quads';
+  if (m == 'hamstrings') return 'hamstrings';
+  if (m.startsWith('gluteus') || m == 'adductors') return 'glutes';
+  if (m == 'gastrocnemius' || m == 'soleus') return 'calves';
+  return 'abs';
+}
+
+/// Objetivo semanal ÚNICO (lo usan el generador y el mapa muscular), en
+/// series fraccionales (principal 1, secundario 0,5).
+double muscleWeeklyTarget(String m, UserLevel level,
+    {UserGoal goal = UserGoal.hypertrophy, Set<String> priorities = const {}}) {
+  var t = weeklyTargetFor(m, level);
+  t *= switch (goal) {
+    UserGoal.maintenance => 1 / 3, // Bickel 2011: ~1/3 del volumen mantiene
+    UserGoal.strength => 0.8, // menos volumen, más intensidad
+    _ => 1.0,
+  };
+  if (priorities.contains(muscleGroupOf(m))) t *= 1.35;
+  return t < 2 ? 2 : t;
+}
+
+/// Músculos que reciben mucho trabajo indirecto y rara vez necesitan series
+/// directas en un programa general (lumbares, oblicuos, trapecio superior).
+const Set<String> kMinorMuscles = {'erector_spinae', 'obliques', 'trapezius_upper'};
+
 double weeklyTargetFor(String muscle, UserLevel level) {
   final base = switch (level) {
     UserLevel.beginner => 8.0,
     UserLevel.intermediate => 12.0,
     UserLevel.advanced => 16.0,
   };
+  if (kMinorMuscles.contains(muscle)) return base * 0.35;
   return kSmallMuscles.contains(muscle) ? base * 0.6 : base;
 }
 
@@ -59,6 +96,8 @@ Map<String, MuscleStat> computeMuscleStats({
   required Map<String, Exercise> catalog,
   required Iterable<String> muscleIds,
   required UserLevel level,
+  UserGoal goal = UserGoal.hypertrophy,
+  Set<String> priorities = const {},
   DateTime? now,
 }) {
   final t = now ?? DateTime.now();
@@ -98,7 +137,7 @@ Map<String, MuscleStat> computeMuscleStats({
       m: MuscleStat(
         id: m,
         weeklySets: weekly[m] ?? 0,
-        target: weeklyTargetFor(m, level),
+        target: muscleWeeklyTarget(m, level, goal: goal, priorities: priorities),
         lastTrained: last[m],
         // ~6 series duras recientes ≈ 0 % recuperado
         recovery: (1 - (fatigue[m] ?? 0) / 6).clamp(0.0, 1.0),

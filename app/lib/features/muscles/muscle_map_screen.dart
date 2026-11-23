@@ -83,6 +83,8 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
       catalog: d.exercises,
       muscleIds: d.muscles.map((m) => m.id),
       level: level,
+      goal: ref.watch(userSettingsProvider).goal,
+      priorities: ref.watch(trainingProfileProvider).priorities,
     );
     final colors = {
       for (final s in stats.values)
@@ -92,9 +94,9 @@ class _MuscleMapScreenState extends ConsumerState<MuscleMapScreen> {
     };
     final names = {for (final m in d.muscles) m.id: m.nameEs};
     final inTarget = stats.values.where((s) => s.ratio >= 0.9 && s.ratio <= 1.5).length;
-    final low = stats.values.where((s) => s.weeklySets >= 0.5 && s.ratio < 0.9).length;
-    final none = stats.values.where((s) => s.weeklySets < 0.5).length;
-    final sorted = stats.values.toList()..sort((a, b) => a.ratio.compareTo(b.ratio));
+    final low = stats.values.where((s) => !s.optional && s.weeklySets >= 0.5 && s.ratio < 0.9).length;
+    final none = stats.values.where((s) => !s.optional && s.weeklySets < 0.5).length;
+    final sorted = stats.values.where((s) => !s.optional).toList()..sort((a, b) => a.ratio.compareTo(b.ratio));
 
     final items = <Widget>[
       Center(

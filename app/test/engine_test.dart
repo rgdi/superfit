@@ -54,7 +54,7 @@ void main() {
       expect(m.round(21), 22.5);
       expect(m.round(20, mode: RoundMode.up), 22.5);
       final p = LoadEngine.nextSession(
-          history: _session('s', DateTime(2026, 1, 1), 15, [12, 12, 12], 8),
+          history: _session('s', DateTime(2026, 1, 1), 15, [14, 14, 14], 8),
           repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 10, machine: m);
       expect(p.weight, 17.5); // siguiente peso real, no 15 + "salto"
     });
@@ -69,11 +69,31 @@ void main() {
     test('todas las series al tope del rango a buen RPE → sube carga', () {
       final h = _session('s1', DateTime(2026, 1, 10), 40, [12, 12, 12], 8);
       final p = LoadEngine.nextSession(
-          history: h, repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 20, machine: stack);
+          history: h, repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 20, machine: MachineSpec(increment: 2.5));
       expect(p.action, LoadAction.increase);
-      expect(p.weight, greaterThan(40));
-      expect(p.weight, lessThanOrEqualTo(45)); // tope +10% → 44 → con placas de 5: 45
+      expect(p.weight, 42.5);
       expect(p.targetReps, 8);
+    });
+
+    test('salto de placa demasiado grande: amplía el rango antes de subir', () {
+      // 40 kg × 12 a RPE 8 → e1RM ≈ 58,7. Con 45 kg a RPE 8 harían ~7 reps (< 8)
+      final h = _session('s1', DateTime(2026, 1, 10), 40, [12, 12, 12], 8);
+      final big = MachineSpec(minWeight: 5, maxWeight: 100, increment: 5);
+      final p = LoadEngine.nextSession(history: h, repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 20, machine: big);
+      expect(p.action, LoadAction.addReps);
+      expect(p.weight, 40);
+      expect(p.targetReps, 13);
+      expect(p.reason, contains('salto grande'));
+      // Con microcarga de 2,5 kg sí sube (42,5 → ~9 reps)
+      final micro = MachineSpec(minWeight: 5, maxWeight: 100, increment: 5, addOns: [2.5]);
+      final q = LoadEngine.nextSession(history: h, repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 20, machine: micro);
+      expect(q.action, LoadAction.increase);
+      expect(q.weight, 42.5);
+      // Cuando ya hace 14 reps, sube aunque el salto sea grande
+      final h2 = _session('s2', DateTime(2026, 1, 20), 40, [14, 14, 14], 8);
+      final r = LoadEngine.nextSession(history: h2, repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 20, machine: big);
+      expect(r.action, LoadAction.increase);
+      expect(r.weight, 45);
     });
 
     test('dentro del rango → mismo peso, +1 rep', () {
@@ -188,7 +208,7 @@ void main() {
           expect(ex.usableWith(types), isTrue, reason: ex.id);
         }
       }
-      expect(g.rationale.join(' '), contains('sin ejercicio disponible'));
+      expect(g.rationale.join(' '), contains('Sin ninguna máquina para'));
     });
 
     test('excluye ejercicios contraindicados por lesión de rodilla', () {
@@ -229,8 +249,9 @@ void main() {
         level: UserLevel.intermediate,
         goal: UserGoal.hypertrophy,
       ).generate();
+      // El isquio se entrena con curl femoral (no solo con extensión lumbar)
       final lower = g.routines[1].workout.map((i) => i.exerciseId).toList();
-      expect(lower.indexOf('leg_curl'), lessThan(lower.indexOf('back_extension') < 0 ? 99 : lower.indexOf('back_extension')));
+      expect(lower, contains('leg_curl'));
     });
 
     test('poco tiempo recorta series pero mantiene ≥2 por ejercicio', () {
@@ -306,6 +327,31 @@ void main() {
       final low = coach.adapt(r, date: DateTime(2026, 1, 20), readiness: Readiness.low);
       expect(low.workout.first.sets, r.workout.first.sets > 2 ? r.workout.first.sets - 1 : 2);
       expect(low.workout.first.rpeTarget, coach.rpeForWeek(3) - 1);
+    });
+
+    test('rotación robusta: si cambias el orden, no se salta ninguna sesión', () {
+      final recent = [
+        FinishedSessionInfo('gen_3', DateTime(2026, 1, 7), 8), // hizo la 3 antes que la 2
+        FinishedSessionInfo('gen_1', DateTime(2026, 1, 5), 8),
+      ];
+      expect(coach.nextRoutine(recent).id, 'gen_2');
+    });
+
+    test('si los músculos de la sesión siguiente siguen fatigados, propone otra', () {
+      final cat = {for (final e in catalog) e.id: e.primaryMuscles};
+      final next = coach.nextRoutine(const []); // gen_1 = Torso A
+      final fatigued = {
+        for (final it in next.workout)
+          for (final m in cat[it.exerciseId]!) m: 0.2,
+      };
+      final rec = {
+        for (final m in ['quadriceps', 'hamstrings', 'gluteus_maximus', 'gastrocnemius', 'soleus', 'adductors',
+          'gluteus_medius', 'rectus_abdominis', 'obliques', 'erector_spinae']) m: 1.0,
+        ...fatigued,
+      };
+      final a = coach.adviseToday(now: DateTime(2026, 1, 6), recent: const [], daysPerWeek: 4, recovery: rec, primaryOf: cat);
+      expect(a.routine!.nameEs, startsWith('Pierna'));
+      expect(a.notes.join(' '), contains('recuperando'));
     });
 
     test('semana completada → sugiere descanso', () {

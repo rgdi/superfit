@@ -52,14 +52,39 @@ class ProgramCoach {
   }
 
   /// Siguiente rutina de la rotación según lo último completado.
+  /// Siguiente rutina: la que hace más tiempo que no se hace (las nunca
+  /// hechas primero, en orden). Así, si cambias el orden un día, la rotación
+  /// se recompone sola en vez de saltarse una sesión.
   Routine nextRoutine(List<FinishedSessionInfo> recent) {
     final ids = program.rotation;
-    final lastIdx = recent
-        .where((s) => ids.contains(s.routineId))
-        .map((s) => ids.indexOf(s.routineId))
-        .firstOrNull;
-    final nextId = lastIdx == null ? ids.first : ids[(lastIdx + 1) % ids.length];
-    return program.routines.firstWhere((r) => r.id == nextId);
+    DateTime? lastOf(String id) =>
+        recent.where((s) => s.routineId == id).map((s) => s.startedAt).fold<DateTime?>(
+            null, (a, b) => a == null || b.isAfter(a) ? b : a);
+    String best = ids.first;
+    DateTime? bestDate = lastOf(best);
+    for (final id in ids.skip(1)) {
+      final d = lastOf(id);
+      if (bestDate == null) break; // ya hay una nunca hecha antes en el orden
+      if (d == null || d.isBefore(bestDate)) {
+        best = id;
+        bestDate = d;
+      }
+    }
+    return program.routines.firstWhere((r) => r.id == best);
+  }
+
+  /// Recuperación media (ponderada por series) de los músculos principales de una rutina.
+  static double routineRecovery(Routine r, Map<String, double> recovery, Map<String, List<String>> primaryOf) {
+    var sum = 0.0, w = 0.0;
+    for (final it in r.workout) {
+      for (final m in primaryOf[it.exerciseId] ?? const <String>[]) {
+        final rec = recovery[m];
+        if (rec == null) continue;
+        sum += rec * it.sets;
+        w += it.sets;
+      }
+    }
+    return w == 0 ? 1 : sum / w;
   }
 
   CoachAdvice adviseToday({
@@ -67,11 +92,26 @@ class ProgramCoach {
     required List<FinishedSessionInfo> recent, // más reciente primero
     required int daysPerWeek,
     double fatigueShare = 0, // % de ejercicios con caída de rendimiento
+    Map<String, double>? recovery, // músculo → 0..1 (muscle_stats)
+    Map<String, List<String>>? primaryOf, // ejercicio → músculos principales
   }) {
     final week = program.weekFor(now);
     final deload = program.isDeloadWeek(now);
-    final routine = nextRoutine(recent);
+    var routine = nextRoutine(recent);
     final notes = <String>[];
+    // ¿Los músculos de la sesión que toca siguen fatigados? Propón otra más fresca.
+    if (recovery != null && primaryOf != null && program.routines.length > 1) {
+      final rec = routineRecovery(routine, recovery, primaryOf);
+      if (rec < 0.45) {
+        final alt = program.routines.where((r) => r.id != routine.id).map((r) => (r, routineRecovery(r, recovery, primaryOf)))
+            .reduce((a, b) => a.$2 >= b.$2 ? a : b);
+        if (alt.$2 >= 0.7) {
+          notes.add('${routine.nameEs} trabaja músculos que aún se están recuperando '
+              '(~${(rec * 100).round()} %). Hoy mejor ${alt.$1.nameEs} (~${(alt.$2 * 100).round()} %).');
+          routine = alt.$1;
+        }
+      }
+    }
 
     final today = DateTime(now.year, now.month, now.day);
     final trainedToday = recent.any((s) => !s.startedAt.isBefore(today));

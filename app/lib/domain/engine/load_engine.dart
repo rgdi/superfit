@@ -119,7 +119,7 @@ class LoadEngine {
 
     LoadPrescription build(double w, int reps, LoadAction a, String why) => LoadPrescription(
           weight: w,
-          targetReps: reps.clamp(repMin, repMax),
+          targetReps: reps.clamp(math.min(reps, repMin), repMax),
           repMin: repMin,
           repMax: repMax,
           rpeTarget: rpeTarget,
@@ -145,6 +145,33 @@ class LoadEngine {
       if (next <= lastWeight) {
         return build(lastWeight, repMax, LoadAction.maxedOut,
             'Has llegado al máximo de la máquina. Sube reps, baja el tempo (3 s) o cambia de variante.');
+      }
+      // ¿Con el siguiente peso real llegarías al mínimo de reps? En pilas con
+      // saltos grandes (40 → 45 kg = +12,5 %) muchas veces no: entonces antes
+      // de subir se amplía el rango hasta 2 reps por encima del máximo.
+      final predicted = (lastE1rm / next - 1) * 30 - (10 - rpeTarget);
+      final jumpPct = ((next / lastWeight - 1) * 100).round();
+      if (predicted < repMin - 0.5) {
+        if (minReps < repMax + 2) {
+          final t = math.min(repMax + 2, minReps + 1);
+          return LoadPrescription(
+            weight: lastWeight,
+            targetReps: t,
+            repMin: repMin,
+            repMax: repMax + 2,
+            rpeTarget: rpeTarget,
+            action: LoadAction.addReps,
+            reason: 'La siguiente placa (${_fmt(next)} kg, +$jumpPct %) es un salto grande: con ella harías '
+                '~${math.max(0, predicted).floor()} reps. Primero llega a $t reps con ${_fmt(lastWeight)} kg. '
+                'Si tu máquina tiene microcarga, añádela en Mis máquinas.',
+            e1rm: lastE1rm,
+            plateau: plateau,
+            performanceDrop: drop,
+          );
+        }
+        final t = math.max(repMin - 2, predicted.floor()).clamp(1, repMax);
+        return build(next, t, LoadAction.increase,
+            'Ya haces ${repMax + 2} reps: toca subir a ${_fmt(next)} kg (+$jumpPct %). Empieza con $t reps y vuelve a subir.');
       }
       return build(next, repMin, LoadAction.increase,
           'Completaste $repMax reps en todas las series a RPE ≤ $rpeTarget → sube a ${_fmt(next)} kg y vuelve a $repMin reps.');

@@ -9,6 +9,7 @@ import '../../data/models/generated_program.dart';
 import '../../data/models/routine.dart';
 import '../../domain/engine/load_engine.dart';
 import '../../domain/engine/program_coach.dart';
+import '../../domain/engine/muscle_stats.dart';
 import '../../domain/ai/ai_service.dart' show kReadinessPrefix;
 import '../../widgets/exercise_animation.dart';
 
@@ -41,11 +42,25 @@ class ProgramTodayCard extends ConsumerWidget {
       if (rx.performanceDrop) drops++;
     }
     final profile = ref.read(trainingProfileProvider);
+    // Recuperación por músculo para elegir la sesión más adecuada hoy
+    final cat = ref.read(catalogRepoProvider);
+    final exercises = {for (final e in await cat.exercises()) e.id: e};
+    final muscleIds = (await cat.muscles()).map((m) => m.id);
+    final cutoff2 = DateTime.now().subtract(const Duration(days: 7));
+    final recentSets = (await ref.read(setRepoProvider).allCompleted()).where((s) => s.performedAt.isAfter(cutoff2)).toList();
+    final stats = computeMuscleStats(
+      sets: recentSets,
+      catalog: exercises,
+      muscleIds: muscleIds,
+      level: ref.read(userSettingsProvider).level,
+    );
     return ProgramCoach(program).adviseToday(
       now: DateTime.now(),
       recent: recent,
       daysPerWeek: profile.daysPerWeek,
       fatigueShare: considered >= 3 ? drops / considered : 0,
+      recovery: {for (final s in stats.values) s.id: s.recovery},
+      primaryOf: {for (final e in exercises.values) e.id: e.primaryMuscles},
     );
   }
 
@@ -87,6 +102,11 @@ class ProgramTodayCard extends ConsumerWidget {
             Text('Esfuerzo objetivo RPE ${coach.rpeForWeek(a.week)}',
                 style: const TextStyle(fontSize: 14, color: AppTheme.textMuted)),
           ],
+          for (final n in a.notes.where((n) => n.contains('recuperando') || n.contains('rendimiento ha bajado')))
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(n, style: const TextStyle(fontSize: 14, color: Colors.white, height: 1.4)),
+            ),
           const SizedBox(height: 18),
           SizedBox(
             width: double.infinity,
