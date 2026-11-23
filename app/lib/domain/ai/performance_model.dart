@@ -57,6 +57,7 @@ class _KState {
   double p; // varianza
   DateTime last;
   DateTime? lastSession;
+  DateTime? prevSession; // sesión anterior a la última
   String? lastSessionId;
   int n = 0;
   final List<(DateTime, double)> history = []; // (fecha, media tras la sesión)
@@ -71,8 +72,10 @@ class StrengthEstimate {
   final List<(DateTime, double)> history;
   const StrengthEstimate(this.oneRm, this.sd, this.observations, this.trendPerWeek, this.history);
 
-  String get confidence => sd < 0.05 ? 'alta' : (sd < 0.10 ? 'media' : 'baja');
-  bool get usable => observations >= 3 && sd < 0.10;
+  /// Sesiones distintas (las series de una misma sesión no son evidencia independiente).
+  int get sessions => history.length;
+  String get confidence => sessions < 3 ? 'baja' : (sd < 0.05 ? 'alta' : (sd < 0.10 ? 'media' : 'baja'));
+  bool get usable => sessions >= 3 && sd < 0.10;
 }
 
 class ModelInsights {
@@ -313,6 +316,7 @@ class PerformanceModel {
     st.p *= (1 - gain);
     st.n++;
     if (st.lastSessionId != o.sessionId) {
+      st.prevSession = st.lastSession;
       st.lastSessionId = o.sessionId;
       st.lastSession = o.at;
       st.history.add((o.at, st.m));
@@ -400,27 +404,29 @@ class PerformanceModel {
         st.history.map((h) => (h.$1, math.exp(h.$2))).toList());
   }
 
-  double _sEff(String exerciseId, String? machineId, int setIndex, int readiness, DateTime at) {
+  double _sEff(String exerciseId, String? machineId, int setIndex, int readiness, DateTime at, {String? sessionId}) {
     final key = machineId == null ? exerciseId : '$exerciseId@$machineId';
     final st = _states[key]!;
-    final daysSince = st.lastSession == null ? 7.0 : at.difference(st.lastSession!).inHours / 24.0;
+    // Dentro de la sesión en curso, "entreno reciente" se mide desde la sesión anterior
+    final ref = (sessionId != null && st.lastSessionId == sessionId) ? st.prevSession : st.lastSession;
+    final daysSince = ref == null ? 7.0 : at.difference(ref).inHours / 24.0;
     final recent = (3 - daysSince.clamp(0, 3)) / 3;
     return math.exp(st.m + _dot(beta, [setIndex.clamp(0, 6).toDouble(), readiness.toDouble(), recent]));
   }
 
   /// Reps que harías con `weight` dejando `rir` en reserva.
   double? predictReps(String exerciseId, String? machineId, bool compound, double weight,
-      {int setIndex = 0, int readiness = 0, double rir = 2, DateTime? at}) {
+      {int setIndex = 0, int readiness = 0, double rir = 2, DateTime? at, String? sessionId}) {
     if (!knows(exerciseId, machineId) || weight <= 0) return null;
-    final s = _sEff(exerciseId, machineId, setIndex, readiness, at ?? DateTime.now());
+    final s = _sEff(exerciseId, machineId, setIndex, readiness, at ?? DateTime.now(), sessionId: sessionId);
     return math.max(0, (s / weight - 1) / _k(compound) - rir);
   }
 
   /// Peso para hacer `reps` a `rpe`, redondeado a lo que existe en la máquina.
   double? recommendWeight(String exerciseId, String? machineId, bool compound, int reps, int rpe,
-      {int setIndex = 0, int readiness = 0, DateTime? at, MachineSpec? spec}) {
+      {int setIndex = 0, int readiness = 0, DateTime? at, MachineSpec? spec, String? sessionId}) {
     if (!knows(exerciseId, machineId)) return null;
-    final s = _sEff(exerciseId, machineId, setIndex, readiness, at ?? DateTime.now());
+    final s = _sEff(exerciseId, machineId, setIndex, readiness, at ?? DateTime.now(), sessionId: sessionId);
     final w = s / (1 + _k(compound) * (reps + (10 - rpe).clamp(0, 6)));
     return (spec ?? MachineSpec.generic).round(w, mode: RoundMode.down);
   }

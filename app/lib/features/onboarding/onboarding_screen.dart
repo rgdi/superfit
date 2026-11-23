@@ -361,6 +361,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
     await ref.read(userSettingsProvider.notifier).update(settings);
     await ref.read(userSettingsProvider.notifier).markOnboardingDone();
+    ref.invalidate(onboardingDoneProvider); // el router se refresca y deja pasar
     if (mounted) context.go('/');
   }
 }

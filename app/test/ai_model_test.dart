@@ -106,6 +106,15 @@ void main() {
     expect(b / a, closeTo(2, 0.25)); // la m2 "pesa" el doble en su escala
   });
 
+  test('confianza por sesiones: con una sola sesión no se usa', () {
+    final one = _simulate(weeks: 1).where((o) => o.sessionId == 's0').toList();
+    final m = PerformanceModel.fit(one);
+    final st = m.strength('leg_press', 'm1')!;
+    expect(st.sessions, 1);
+    expect(st.usable, isFalse);
+    expect(st.confidence, 'baja');
+  });
+
   test('actualización en vivo mueve la estimación', () {
     final m = PerformanceModel.fit(_simulate(weeks: 4));
     final before = m.strength('leg_press', 'm1')!.oneRm;

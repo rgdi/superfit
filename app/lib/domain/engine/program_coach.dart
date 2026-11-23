@@ -11,6 +11,7 @@ import 'dart:math' as math;
 import '../../data/models/generated_program.dart';
 import '../../data/models/routine.dart';
 import '../../data/models/workout_item.dart';
+import 'program_generator.dart';
 
 enum Readiness { low, normal, high }
 
@@ -48,6 +49,7 @@ class ProgramCoach {
     if (w >= n) return 6;
     final build = n - 1;
     if (build <= 1) return 8;
+    if (build == 2) return w == 1 ? 7 : 8; // bloques cortos: sin saltar de 7 a 9
     return (7 + 2 * (w - 1) / (build - 1)).round().clamp(7, 9);
   }
 
@@ -99,6 +101,7 @@ class ProgramCoach {
     final deload = program.isDeloadWeek(now);
     var routine = nextRoutine(recent);
     final notes = <String>[];
+    var fatiguedAll = false;
     // ¿Los músculos de la sesión que toca siguen fatigados? Propón otra más fresca.
     if (recovery != null && primaryOf != null && program.routines.length > 1) {
       final rec = routineRecovery(routine, recovery, primaryOf);
@@ -109,6 +112,10 @@ class ProgramCoach {
           notes.add('${routine.nameEs} trabaja músculos que aún se están recuperando '
               '(~${(rec * 100).round()} %). Hoy mejor ${alt.$1.nameEs} (~${(alt.$2 * 100).round()} %).');
           routine = alt.$1;
+        } else {
+          notes.add('Tus músculos aún se están recuperando (~${(rec * 100).round()} %): '
+              'si puedes, descansa hoy y entrena mañana.');
+          fatiguedAll = true;
         }
       }
     }
@@ -149,10 +156,11 @@ class ProgramCoach {
     }
     return CoachAdvice(
       routine: routine,
-      headline: 'Hoy toca: ${routine.nameEs}',
+      headline: fatiguedAll ? 'Mejor descansa hoy' : 'Hoy toca: ${routine.nameEs}',
       notes: notes,
       week: week,
       deload: deload,
+      suggestRest: fatiguedAll,
     );
   }
 
@@ -193,7 +201,7 @@ class ProgramCoach {
       nameEs: r.nameEs,
       nameEn: r.nameEn,
       dayOfWeek: r.dayOfWeek,
-      estimatedMinutes: r.estimatedMinutes,
+      estimatedMinutes: ProgramGenerator.estimateMinutes(items),
       level: r.level,
       goal: r.goal,
       warmup: r.warmup,

@@ -36,8 +36,10 @@ class GeneratedProgram {
 
   /// Semana del mesociclo (1..mesocycleWeeks) para una fecha.
   int weekFor(DateTime date) {
-    final d0 = DateTime(startDate.year, startDate.month, startDate.day);
-    final days = DateTime(date.year, date.month, date.day).difference(d0).inDays;
+    // En UTC: con fechas locales, el cambio de hora hace que 7 días midan
+    // 6 d 23 h y el lunes caía en la semana anterior.
+    final d0 = DateTime.utc(startDate.year, startDate.month, startDate.day);
+    final days = DateTime.utc(date.year, date.month, date.day).difference(d0).inDays;
     if (days < 0) return 1;
     return (days ~/ 7) % mesocycleWeeks + 1;
   }

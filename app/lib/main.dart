@@ -39,16 +39,45 @@ void main() {
   runApp(const ProviderScope(child: SuperFitApp()));
 }
 
-class SuperFitApp extends ConsumerWidget {
+class SuperFitApp extends ConsumerStatefulWidget {
   final String initialLocation;
   const SuperFitApp({super.key, this.initialLocation = '/'});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final onboardingAsync = ref.watch(onboardingDoneProvider);
-    final router = GoRouter(
-      initialLocation: initialLocation,
+  ConsumerState<SuperFitApp> createState() => _SuperFitAppState();
+}
+
+class _SuperFitAppState extends ConsumerState<SuperFitApp> {
+  // Un único router durante toda la vida de la app (antes se recreaba en cada
+  // build y reseteaba la navegación). Se refresca cuando cambia el onboarding.
+  final _refresh = ValueNotifier<int>(0);
+  late final GoRouter _router = _buildRouter();
+
+  @override
+  void dispose() {
+    _refresh.dispose();
+    _router.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(onboardingDoneProvider, (_, __) => _refresh.value++);
+    return MaterialApp.router(
+      title: 'SuperFit',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.dark(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.dark,
+      routerConfig: _router,
+    );
+  }
+
+  GoRouter _buildRouter() => GoRouter(
+      initialLocation: widget.initialLocation,
+      refreshListenable: _refresh,
       redirect: (context, state) {
+        final onboardingAsync = ref.read(onboardingDoneProvider);
         if (onboardingAsync.isLoading) return null;
         final done = onboardingAsync.valueOrNull ?? false;
         final loc = state.matchedLocation;
@@ -92,7 +121,7 @@ class SuperFitApp extends ConsumerWidget {
         GoRoute(
           path: '/progress/compare',
           builder: (_, state) {
-            final extra = state.extra as Map<String, String>?;
+            final extra = state.extra as Map<String, String?>?;
             return PhotoCompareScreen(
               photoId1: extra?['id1'] ?? '',
               photoId2: extra?['id2'] ?? '',
@@ -113,16 +142,6 @@ class SuperFitApp extends ConsumerWidget {
         ),
       ],
     );
-
-    return MaterialApp.router(
-      title: 'SuperFit',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark(),
-      darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.dark,
-      routerConfig: router,
-    );
-  }
 }
 
 const String _rbhLicense = r'''MIT License

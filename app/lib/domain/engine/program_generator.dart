@@ -101,13 +101,13 @@ class _SessionType {
 const _full = _SessionType('Cuerpo completo', 'Full body', {..._upperM, ..._lowerM},
     ['quadriceps', 'pectoralis_major_sternal', 'latissimus_dorsi', 'hamstrings', 'deltoid_lateral']);
 const _upper = _SessionType('Torso', 'Upper', _upperM,
-    ['pectoralis_major_sternal', 'latissimus_dorsi', 'deltoid_lateral', 'trapezius_middle', 'deltoid_posterior']);
+    ['pectoralis_major_sternal', 'vpull', 'hpull', 'deltoid_lateral', 'deltoid_posterior']);
 const _lower = _SessionType('Pierna', 'Lower', _lowerM,
     ['quadriceps', 'hamstrings', 'gluteus_maximus', 'gastrocnemius', 'rectus_abdominis']);
 const _push = _SessionType('Empuje', 'Push', _pushM,
     ['pectoralis_major_sternal', 'deltoid_lateral', 'triceps_long']);
 const _pull = _SessionType('Tirón', 'Pull', _pullM,
-    ['latissimus_dorsi', 'trapezius_middle', 'deltoid_posterior', 'biceps_brachii']);
+    ['vpull', 'hpull', 'deltoid_posterior', 'biceps_brachii']);
 
 /// Días recomendados (1 = lunes) para repartir la recuperación.
 const Map<int, List<int>> kScheduleDays = {
@@ -139,11 +139,11 @@ class ProgramGenerator {
     required this.goal,
   });
 
-  static const int _warmupSec = 5 * 60;
+  static const int _warmupSec = 7 * 60; // 5 min cardio + 2 min aproximación
   static const int _setupSec = 60; // cambiar/ajustar máquina
   static const int _workSec = 40; // duración de una serie
   static const double _sessionCap = 10; // series fraccionales por músculo y sesión
-  static const int _maxSetsPerExercise = 5;
+  static const int _maxSetsPerExercise = 4; // más variedad: mejor 2 ejercicios × 4 que 1 × 5+
 
   GeneratedProgram generate({DateTime? now}) {
     final days = profile.daysPerWeek.clamp(2, 6);
@@ -189,7 +189,8 @@ class ProgramGenerator {
       final t = target[m]!;
       if (v <= t) return v;
       if (v <= 1.4 * t) return t + 0.15 * (v - t);
-      return t + 0.15 * 0.4 * t;
+      // Muy por encima del objetivo (p. ej. por series indirectas): penaliza un poco
+      return t + 0.06 * t - 0.1 * (v - 1.5 * t).clamp(0, double.infinity);
     }
 
     double gain(int s, Exercise e, int k) {
@@ -225,11 +226,19 @@ class ProgramGenerator {
     // (tocan más músculos) y podía dejar un "cuerpo completo" sin piernas.
     for (int s = 0; s < sessions.length; s++) {
       for (final m in sessions[s].core) {
-        if (sessVol[s][m]! > 0) continue;
+        if (sessVol[s].containsKey(m) && sessVol[s][m]! > 0) continue;
+        if (m == 'vpull' && plan[s].any((it) => it.ex.pattern == 'vertical_pull' && it.ex.category == 'compound')) continue;
+        if (m == 'hpull' && plan[s].any((it) => it.ex.pattern == 'horizontal_pull' && it.ex.category == 'compound')) continue;
         Exercise? best;
         var bestSc = 0.0;
+        bool matches(Exercise e) => switch (m) {
+              // Patrones de tirón: vertical (jalón) y horizontal (remo), multiarticulares
+              'vpull' => e.pattern == 'vertical_pull' && e.category == 'compound',
+              'hpull' => e.pattern == 'horizontal_pull' && e.category == 'compound',
+              _ => e.primaryMuscles.contains(m),
+            };
         for (final e in usable) {
-          if (!eligible(s, e) || !e.primaryMuscles.contains(m) || plan[s].any((it) => it.ex.id == e.id)) continue;
+          if (!eligible(s, e) || !matches(e) || plan[s].any((it) => it.ex.id == e.id)) continue;
           final cost = _setupSec + 2 * setCost(e);
           if (used[s] + cost > budget) continue;
           final twin = _twinHas(sessions, plan, s, e.id) ? 0.92 : 1.0;
@@ -246,6 +255,10 @@ class ProgramGenerator {
       }
     }
 
+    // Reparto equilibrado: favorece las sesiones menos llenas (si no, las
+    // primeras acaparaban el volumen y las últimas quedaban de 25 min).
+    double balance(int s) => 1.3 - 0.6 * (used[s] / budget).clamp(0.0, 1.0);
+
     // --- Fase 2: asignación voraz
     for (var guard = 0; guard < 400; guard++) {
       double bestScore = 0;
@@ -258,7 +271,7 @@ class ProgramGenerator {
           if (it.sets >= _maxSetsPerExercise) continue;
           final cost = setCost(it.ex);
           if (used[s] + cost > budget) continue;
-          final sc = gain(s, it.ex, 1) / (cost / 60);
+          final sc = gain(s, it.ex, 1) / (cost / 60) * balance(s);
           if (sc > bestScore + 1e-9) {
             bestScore = sc;
             bs = s;
@@ -272,8 +285,8 @@ class ProgramGenerator {
           final cost = _setupSec + 2 * setCost(e);
           if (used[s] + cost > budget) continue;
           // Variedad: ligera penalización si la sesión "gemela" ya lo usa
-          final twin = _twinHas(sessions, plan, s, e.id) ? 0.92 : 1.0;
-          final sc = gain(s, e, 2) * twin / (cost / 60);
+          final twin = _twinHas(sessions, plan, s, e.id) ? 0.8 : 1.0;
+          final sc = gain(s, e, 2) * twin / (cost / 60) * balance(s);
           if (sc > bestScore + 1e-9) {
             bestScore = sc;
             bs = s;
@@ -467,7 +480,7 @@ class ProgramGenerator {
       }[m] ??
       m;
 
-  /// Minutos estimados: 5 calentamiento + (40 s + descanso) por serie + 1 min por ejercicio.
+  /// Minutos estimados: 7 de calentamiento + (40 s + descanso) por serie + 1 min por ejercicio.
   static int estimateMinutes(List<WorkoutItem> items) {
     double s = _warmupSec.toDouble();
     for (final it in items) {

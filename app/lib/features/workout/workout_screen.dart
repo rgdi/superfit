@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/exercise.dart';
+import '../../data/models/generated_program.dart';
 import '../../data/models/gym_machine.dart';
 import '../../data/models/routine.dart';
 import '../../data/models/set_log.dart';
@@ -62,6 +63,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
   TrainingProfile _profile = const TrainingProfile();
   Readiness _readiness = Readiness.normal;
   PerformanceModel? _ai;
+  GeneratedProgram? _program;
+  bool _isDeload = false; // semana de descarga (explícito, no deducido del RPE)
 
   int _index = 0;
   int _dir = 1; // dirección de la animación entre ejercicios
@@ -103,6 +106,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       final rd = prefs.getString('$kReadinessPrefix${session.id}');
       _readiness = Readiness.values.firstWhere((r) => r.name == rd, orElse: () => Readiness.normal);
       final program = await gym.program();
+      _program = program;
+      _isDeload = routine.isGenerated && program != null && program.isDeloadWeek(session.startedAt);
       if (routine.isGenerated && program != null) {
         routine = ProgramCoach(program).adapt(routine, date: session.startedAt, readiness: _readiness);
       }
@@ -157,8 +162,18 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         ? all
         : all.where((s) => s.machineId == machine.id || s.machineId == null).toList();
     final otherMachine = machine != null && hist.isEmpty && all.isNotEmpty;
+    bool wasDeload(DateTime t) =>
+        _program != null && !t.isBefore(_program!.startDate) && _program!.isDeloadWeek(t);
     final records = hist
-        .map((s) => SetRecord(sessionId: s.sessionId, weight: s.weight, reps: s.reps, rpe: s.rpe, at: s.performedAt))
+        .map((s) => SetRecord(
+              sessionId: s.sessionId,
+              weight: s.weight,
+              reps: s.reps,
+              rpe: s.rpe,
+              at: s.performedAt,
+              technique: s.technique,
+              deload: wasDeload(s.performedAt),
+            ))
         .toList();
     _bestE1rm[exId] = records.isEmpty
         ? 0
@@ -169,7 +184,8 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       history: records,
       repMin: lo,
       repMax: hi,
-      rpeTarget: item.rpeTarget,
+      // En descarga, la referencia es la progresión normal (RPE 8), no la de RPE 6
+      rpeTarget: _isDeload ? 8 : item.rpeTarget,
       coldStartWeight: coldStartWeight(ex, _profile, level),
       machine: spec,
     );
@@ -178,12 +194,19 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     // IA: si conoce bien este ejercicio en esta máquina, afina el peso (±10 %)
     final mId = hist.any((s) => s.machineId != null) ? machine?.id : null;
     final st = _ai?.strength(exId, mId);
-    if (_ai != null && st != null && st.usable && rx.action != LoadAction.calibrate) {
+    if (!_isDeload && _ai != null && st != null && st.usable && rx.action != LoadAction.calibrate) {
       final aiW = _ai!.recommendWeight(exId, mId, ex.category == 'compound', rx.targetReps, item.rpeTarget,
           readiness: _readinessValue, spec: spec);
       if (aiW != null) {
-        final bounded = spec.round(aiW.clamp(rx.weight * 0.9, rx.weight * 1.1), mode: RoundMode.down);
+        // Peso real de la máquina más cercano al del modelo dentro de ±10 %
+        // (antes se redondeaba siempre hacia abajo y nunca podía subir)
+        final band = spec.weights.where((x) => x >= rx.weight * 0.9 - 1e-6 && x <= rx.weight * 1.1 + 1e-6).toList();
+        final bounded = band.isEmpty ? w : band.reduce((a, b) => (a - aiW).abs() <= (b - aiW).abs() ? a : b);
         if ((bounded - w).abs() > 1e-6) {
+          // Reps coherentes con el peso elegido por el modelo
+          final pr = _ai!.predictReps(exId, mId, ex.category == 'compound', bounded,
+              readiness: _readinessValue, rir: (10 - item.rpeTarget).toDouble());
+          if (pr != null) rx = rx.copyWith(targetReps: pr.floor().clamp(lo, hi));
           _override[exId] = bounded < w
               ? 'Según el plan tocarían ${fmtKg(w)} kg, pero por tu rendimiento reciente mejor ${fmtKg(bounded)} kg.'
               : 'Vas más fuerte de lo previsto: ${fmtKg(bounded)} kg en lugar de ${fmtKg(w)} kg.';
@@ -207,7 +230,17 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       );
       w = rx.weight;
     }
-    if (item.rpeTarget <= 6) w = spec.round(w * 0.9, mode: RoundMode.down); // descarga
+    if (_isDeload && !otherMachine && rx.previousWeight != null) {
+      // Descarga: una sola rebaja del 10 % sobre tu peso habitual (antes se
+      // aplicaban dos: la de la regla y otra encima, ≈ −15 %)
+      w = spec.round(rx.previousWeight! * 0.9, mode: RoundMode.down);
+      rx = rx.copyWith(
+        weight: w,
+        action: LoadAction.hold,
+        reason: 'Semana de descarga: ${fmtKg(w)} kg (un 10 % menos de lo habitual) y la mitad de series.',
+      );
+      _override.remove(exId);
+    }
     if (!mounted) return;
     setState(() {
       _rx[exId] = rx;
@@ -450,7 +483,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     }
     final w = plan.firstWhere((p) => p.kind != SetKind.warmup, orElse: () => plan.first).weight;
     final adjusted = _override.containsKey(ex.id);
-    final trend = adjusted ? 'Ajustado' : switch (rx.action) {
+    final trend = _isDeload ? 'Descarga' : adjusted ? 'Ajustado' : switch (rx.action) {
       LoadAction.increase => 'Sube',
       LoadAction.decrease => 'Baja',
       LoadAction.calibrate => 'Calibrando',
@@ -474,11 +507,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
         const SizedBox(height: 4),
         Text(_aiNote[ex.id]!, style: const TextStyle(fontSize: 14, color: AppTheme.textMuted, height: 1.45)),
       ],
-      if (item.rpeTarget <= 6)
-        const Padding(
-          padding: EdgeInsets.only(top: 4),
-          child: Text('Semana de descarga: peso un 10 % menor.', style: TextStyle(fontSize: 14, color: AppTheme.textMuted)),
-        ),
+
       if (rx.plateau || rx.action == LoadAction.maxedOut)
         TextButton(
           style: TextButton.styleFrom(padding: EdgeInsets.zero, foregroundColor: Colors.white),
@@ -756,10 +785,10 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       ));
       final target = _rx[ex.id]?.targetReps ?? lo;
       final pred = _ai!.predictReps(ex.id, mId, ex.category == 'compound', weight,
-          setIndex: workDone, readiness: _readinessValue, rir: (10 - item.rpeTarget).toDouble());
+          setIndex: workDone, readiness: _readinessValue, sessionId: _session!.id, rir: (10 - item.rpeTarget).toDouble());
       if (pred != null && (pred < lo - 0.5 || pred > hi + 2)) {
         next = _ai!.recommendWeight(ex.id, mId, ex.category == 'compound', target, item.rpeTarget,
-            setIndex: workDone, readiness: _readinessValue, spec: spec);
+            setIndex: workDone, readiness: _readinessValue, sessionId: _session!.id, spec: spec);
         why = 'la IA prevé ~${pred.floor()} reps con ${fmtKg(weight)} kg';
       }
     } else {

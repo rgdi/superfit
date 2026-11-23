@@ -87,28 +87,30 @@ final gymMachinesProvider = StateNotifierProvider<GymMachinesNotifier, List<GymM
 
 class GymMachinesNotifier extends StateNotifier<List<GymMachine>> {
   final GymRepo _repo;
-  bool _written = false; // si el usuario escribe antes de que acabe la carga, no pisarlo
+  /// Completa cuando se ha leído lo guardado. Toda escritura lo espera:
+  /// así nunca se guarda una lista parcial encima de la real.
+  late final Future<void> ready;
   GymMachinesNotifier(this._repo) : super(const []) {
-    _repo.machines().then((m) {
-      if (mounted && !_written) state = m;
+    ready = _repo.machines().then((m) {
+      if (mounted) state = m;
     });
   }
 
   Future<void> upsert(GymMachine m) async {
-    _written = true;
+    await ready;
     final i = state.indexWhere((x) => x.id == m.id);
     state = i < 0 ? [...state, m] : [...state.sublist(0, i), m, ...state.sublist(i + 1)];
     await _repo.saveMachines(state);
   }
 
   Future<void> addAll(List<GymMachine> ms) async {
-    _written = true;
+    await ready;
     state = [...state, ...ms];
     await _repo.saveMachines(state);
   }
 
   Future<void> remove(String id) async {
-    _written = true;
+    await ready;
     state = state.where((m) => m.id != id).toList();
     await _repo.saveMachines(state);
   }
@@ -137,18 +139,20 @@ final trainingProfileProvider = StateNotifierProvider<TrainingProfileNotifier, T
 
 class TrainingProfileNotifier extends StateNotifier<TrainingProfile> {
   final GymRepo _repo;
-  bool _written = false;
+  late final Future<void> ready;
   TrainingProfileNotifier(this._repo) : super(const TrainingProfile()) {
-    _repo.profile().then((p) {
-      if (mounted && !_written) state = p;
+    ready = _repo.profile().then((p) {
+      if (mounted) state = p;
     });
   }
 
   Future<void> update(TrainingProfile p) async {
-    _written = true;
+    await ready;
     state = p;
     await _repo.saveProfile(p);
   }
+
+  Future<void> reload() async => state = await _repo.profile();
 }
 
 final programProvider = StateNotifierProvider<ProgramNotifier, GeneratedProgram?>(
@@ -157,18 +161,20 @@ final programProvider = StateNotifierProvider<ProgramNotifier, GeneratedProgram?
 
 class ProgramNotifier extends StateNotifier<GeneratedProgram?> {
   final GymRepo _repo;
-  bool _written = false;
+  late final Future<void> ready;
   ProgramNotifier(this._repo) : super(null) {
-    _repo.program().then((p) {
-      if (mounted && !_written) state = p;
+    ready = _repo.program().then((p) {
+      if (mounted) state = p;
     });
   }
 
   Future<void> set(GeneratedProgram? p) async {
-    _written = true;
+    await ready;
     state = p;
     await _repo.saveProgram(p);
   }
+
+  Future<void> reload() async => state = await _repo.program();
 }
 
 /// IA local: se entrena con todo tu historial al pedirla. Invalídala al

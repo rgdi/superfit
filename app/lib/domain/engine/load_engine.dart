@@ -21,12 +21,16 @@ class SetRecord {
   final int reps;
   final int? rpe;
   final DateTime at;
+  final String? technique; // work | backoff | drop | warmup
+  final bool deload; // hecha en semana de descarga
   const SetRecord({
     required this.sessionId,
     required this.weight,
     required this.reps,
     this.rpe,
     required this.at,
+    this.technique,
+    this.deload = false,
   });
 }
 
@@ -44,6 +48,7 @@ class LoadPrescription {
   final double? e1rm;
   final bool plateau; // e1RM sin mejorar en ~4 sesiones / 3+ semanas
   final bool performanceDrop; // última sesión claramente por debajo
+  final double? previousWeight; // peso de trabajo de la última sesión válida
 
   const LoadPrescription({
     required this.weight,
@@ -56,7 +61,22 @@ class LoadPrescription {
     this.e1rm,
     this.plateau = false,
     this.performanceDrop = false,
+    this.previousWeight,
   });
+
+  LoadPrescription copyWith({double? weight, int? targetReps, String? reason, LoadAction? action}) => LoadPrescription(
+        weight: weight ?? this.weight,
+        targetReps: targetReps ?? this.targetReps,
+        repMin: repMin,
+        repMax: repMax,
+        rpeTarget: rpeTarget,
+        action: action ?? this.action,
+        reason: reason ?? this.reason,
+        e1rm: e1rm,
+        plateau: plateau,
+        performanceDrop: performanceDrop,
+        previousWeight: previousWeight,
+      );
 }
 
 class LoadEngine {
@@ -102,10 +122,16 @@ class LoadEngine {
       );
     }
 
-    final sessions = _bySession(history); // más reciente primero
+    // Las sesiones de descarga no son referencia (peso y series rebajados a
+    // propósito): se ignoran si hay otras. Tampoco cuentan aproximaciones/drops.
+    final valid = history.where((s) => s.technique != 'warmup' && s.technique != 'drop').toList();
+    final normal = valid.where((s) => !s.deload).toList();
+    final sessions = _bySession(normal.isNotEmpty ? normal : (valid.isNotEmpty ? valid : history));
     final last = sessions.first;
-    final lastWeight = _workingWeight(last);
-    final work = last.where((s) => (s.weight - lastWeight).abs() < 0.01).toList();
+    // Peso de trabajo: el de las series principales (no las back-off, que son −10 %)
+    final mainSets = last.where((s) => s.technique != 'backoff').toList();
+    final lastWeight = _workingWeight(mainSets.isEmpty ? last : mainSets);
+    final work = (mainSets.isEmpty ? last : mainSets).where((s) => (s.weight - lastWeight).abs() < 0.01).toList();
     final minReps = work.map((s) => s.reps).reduce(math.min);
     final rpes = work.where((s) => s.rpe != null).map((s) => s.rpe!).toList();
     final avgRpe = rpes.isEmpty ? null : rpes.reduce((a, b) => a + b) / rpes.length;
@@ -130,13 +156,17 @@ class LoadEngine {
           e1rm: lastE1rm,
           plateau: plateau,
           performanceDrop: drop,
+          previousWeight: lastWeight,
         );
 
     final rpeOk = avgRpe == null || avgRpe <= rpeTarget + 0.5;
     final tooHard = (avgRpe != null && avgRpe >= rpeTarget + 1.5) || minReps < repMin;
 
+    // "Demasiado fácil": dentro del rango pero ≥2 puntos de RPE por debajo → subir ya
+    final tooEasy = avgRpe != null && avgRpe <= rpeTarget - 2 && minReps >= repMin;
+
     // 1) Todas las series al tope del rango sin pasarse de RPE → subir carga
-    if (minReps >= repMax && rpeOk) {
+    if ((minReps >= repMax && rpeOk) || tooEasy) {
       var next = machine.up(lastWeight);
       // Si el e1RM dice que vas sobrado, salta más (máx +10%)
       final byE1rm = roundTo(loadFor(lastE1rm, repMin, rpeTarget), machine, mode: RoundMode.down);
@@ -151,6 +181,24 @@ class LoadEngine {
       // de subir se amplía el rango hasta 2 reps por encima del máximo.
       final predicted = (lastE1rm / next - 1) * 30 - (10 - rpeTarget);
       final jumpPct = ((next / lastWeight - 1) * 100).round();
+      if (predicted < repMin - 2) {
+        // Salto enorme (p. ej. 5 → 7,5 kg = +50 %): subir llevaría a fallar y
+        // volver a bajar en bucle. Se progresa por reps y tempo.
+        final t = math.min(repMax + 4, minReps + 1);
+        return LoadPrescription(
+          weight: lastWeight,
+          targetReps: t,
+          repMin: repMin,
+          repMax: repMax + 4,
+          rpeTarget: rpeTarget,
+          action: LoadAction.addReps,
+          reason: 'La siguiente placa (${_fmt(next)} kg, +$jumpPct %) es demasiado salto. Sigue con ${_fmt(lastWeight)} kg: '
+              'sube a $t reps y baja en 3 segundos. Con microcarga podrías subir antes.',
+          e1rm: lastE1rm,
+          plateau: plateau,
+          performanceDrop: drop,
+        );
+      }
       if (predicted < repMin - 0.5) {
         if (minReps < repMax + 2) {
           final t = math.min(repMax + 2, minReps + 1);
@@ -173,8 +221,9 @@ class LoadEngine {
         return build(next, t, LoadAction.increase,
             'Ya haces ${repMax + 2} reps: toca subir a ${_fmt(next)} kg (+$jumpPct %). Empieza con $t reps y vuelve a subir.');
       }
-      return build(next, repMin, LoadAction.increase,
-          'Completaste $repMax reps en todas las series a RPE ≤ $rpeTarget → sube a ${_fmt(next)} kg y vuelve a $repMin reps.');
+      return build(next, repMin, LoadAction.increase, tooEasy && minReps < repMax
+          ? 'Te resultó fácil (RPE ${avgRpe.toStringAsFixed(1)} frente a $rpeTarget) → sube a ${_fmt(next)} kg.'
+          : 'Completaste $repMax reps en todas las series a RPE ≤ $rpeTarget → sube a ${_fmt(next)} kg y vuelve a $repMin reps.');
     }
 
     // 2) Demasiado duro → bajar a lo que dice el e1RM para el centro del rango

@@ -23,6 +23,8 @@ Future<MachineCode?> scanMachineCode(BuildContext context) =>
 Future<GymMachine?> scanAndResolveMachine(BuildContext context, WidgetRef ref) async {
   final code = await scanMachineCode(context);
   if (code == null || !context.mounted) return null;
+  await ref.read(gymMachinesProvider.notifier).ready;
+  if (!context.mounted) return null;
   final machines = ref.read(gymMachinesProvider);
   final r = resolveScan<GymMachine>(
     code,

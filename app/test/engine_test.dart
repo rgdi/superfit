@@ -96,6 +96,46 @@ void main() {
       expect(r.weight, 45);
     });
 
+    test('las sesiones de descarga no sirven de referencia', () {
+      final h = [
+        ..._session('a', DateTime(2026, 1, 1), 50, [12, 11, 10], 9),
+        // descarga: 45 kg, pocas series, RPE bajo
+        ...[for (final r in _session('d', DateTime(2026, 1, 8), 45, [10, 10], 6))
+          SetRecord(sessionId: r.sessionId, weight: r.weight, reps: r.reps, rpe: r.rpe, at: r.at, deload: true)],
+      ];
+      final p = LoadEngine.nextSession(history: h, repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 20,
+          machine: MachineSpec(increment: 2.5));
+      expect(p.previousWeight, 50); // referencia = última sesión normal
+      expect(p.weight, 50);
+    });
+
+    test('top set + back-off: el peso de trabajo es el del top set', () {
+      final h = [
+        SetRecord(sessionId: 's', weight: 50, reps: 10, rpe: 8, at: DateTime(2026, 1, 1, 10), technique: 'work'),
+        SetRecord(sessionId: 's', weight: 45, reps: 10, rpe: 8, at: DateTime(2026, 1, 1, 10, 3), technique: 'backoff'),
+        SetRecord(sessionId: 's', weight: 45, reps: 10, rpe: 8, at: DateTime(2026, 1, 1, 10, 6), technique: 'backoff'),
+      ];
+      final p = LoadEngine.nextSession(history: h, repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 20,
+          machine: MachineSpec(increment: 2.5));
+      expect(p.weight, 50); // antes bajaba a 45 cada vez
+    });
+
+    test('demasiado fácil (RPE ≥2 por debajo): sube sin esperar al tope del rango', () {
+      final h = _session('s', DateTime(2026, 1, 1), 40, [10, 10, 10], 5);
+      final p = LoadEngine.nextSession(history: h, repMin: 8, repMax: 12, rpeTarget: 8, coldStartWeight: 20,
+          machine: MachineSpec(increment: 2.5));
+      expect(p.action, LoadAction.increase);
+      expect(p.weight, greaterThan(40));
+    });
+
+    test('salto enorme (+50 %): no sube, progresa por reps y tempo', () {
+      final h = _session('s', DateTime(2026, 1, 1), 5, [15, 15, 15], 8);
+      final p = LoadEngine.nextSession(history: h, repMin: 10, repMax: 15, rpeTarget: 8, coldStartWeight: 5,
+          machine: MachineSpec(minWeight: 5, maxWeight: 50, increment: 2.5));
+      expect(p.weight, 5);
+      expect(p.reason, contains('demasiado salto'));
+    });
+
     test('dentro del rango → mismo peso, +1 rep', () {
       final h = _session('s1', DateTime(2026, 1, 10), 40, [10, 9, 9], 8);
       final p = LoadEngine.nextSession(
@@ -304,6 +344,12 @@ void main() {
       goal: UserGoal.hypertrophy,
     ).generate(now: DateTime(2026, 1, 5));
     final coach = ProgramCoach(program);
+
+    test('semana del ciclo correcta en el cambio de hora (lunes)', () {
+      final p = GeneratedProgram.decode(program.copyWith(startDate: DateTime(2026, 3, 23)).encode())!;
+      expect(p.weekFor(DateTime(2026, 3, 30)), 2); // lunes tras el cambio de hora de primavera
+      expect(p.weekFor(DateTime(2026, 3, 29)), 1); // domingo anterior
+    });
 
     test('RPE sube por semana y la última es descarga', () {
       expect(coach.rpeForWeek(1), 7);

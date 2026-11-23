@@ -44,9 +44,18 @@ void main() {
               final low = muscles.where((m) => ratio[m]! > 0 && ratio[m]! < 0.5).length;
               final high = muscles.where((m) => ratio[m]! > 1.6).toList();
               final maxMin = p.routines.map((r) => r.estimatedMinutes).reduce((a, b) => a > b ? a : b);
+              final minMin = p.routines.map((r) => r.estimatedMinutes).reduce((a, b) => a < b ? a : b);
+              final uses = <String, int>{};
+              for (final r in p.routines) {
+                for (final it in r.workout) {
+                  uses[it.exerciseId] = (uses[it.exerciseId] ?? 0) + 1;
+                }
+              }
+              final distinct = uses.length;
+              final total = uses.values.fold(0, (a, b) => a + b);
               for (final m in muscles) { agg.putIfAbsent(m, () => []).add(ratio[m]!); }
               rows.add('d$days m$mins ${level.name.substring(0,3)} ${goal.name.substring(0,4)} ${types == null ? 'all' : 'demo'} | '
-                  'cero=${zero.length} bajo=${low} alto=${high.length} maxMin=$maxMin/$mins push/pull=${(push / (pull == 0 ? 1 : pull)).toStringAsFixed(2)} '
+                  'cero=${zero.length} bajo=${low} alto=${high.length} minMin=$minMin maxMin=$maxMin/$mins distintos=$distinct/$total push/pull=${(push / (pull == 0 ? 1 : pull)).toStringAsFixed(2)} '
                   'freqCuads=${freq['quadriceps']} freqPecho=${freq['pectoralis_major_sternal']}${zero.isNotEmpty ? ' cero:${zero.join(',')}' : ''}${high.isNotEmpty ? ' alto:${high.join(',')}' : ''}');
             }
           }
@@ -54,7 +63,7 @@ void main() {
       }
     }
     // Umbrales de calidad (si el generador empeora, este test falla)
-    final bigZero = rows.where((r) => RegExp(r'cero:.*(quadriceps|hamstrings|latissimus_dorsi|pectoralis_major_sternal|gluteus_maximus)').hasMatch(r)).length;
+    final bigZero = rows.where((r) => RegExp(r'cero:[a-z_,]*(quadriceps|hamstrings|latissimus_dorsi|pectoralis_major_sternal|gluteus_maximus)').hasMatch(r)).length;
     final unbalanced = rows.where((r) {
       final x = double.parse(RegExp(r'push/pull=([\d.]+)').firstMatch(r)!.group(1)!);
       return x > 1.6 || x < 0.5;
